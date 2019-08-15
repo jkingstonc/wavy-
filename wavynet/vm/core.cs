@@ -21,9 +21,21 @@ namespace wavynet.vm
 
         public OpcodeInstance[] bytecode;
 
+        public FuncStack func_stack;
+
         public Core(ErrorHandler err_handler)
         {
+            this.pc = 0;
             this.err_handler = err_handler;
+            this.traceback_state = new TraceBack();
+            this.func_stack = new FuncStack();
+
+            setup_func_stack();
+        }
+
+        private void setup_func_stack()
+        {
+            this.func_stack.push_new_frame();
         }
 
         public void register_sequence(OpcodeInstance[] sequence)
@@ -46,11 +58,25 @@ namespace wavynet.vm
                             // Return an END state
                             return make_corestate(CoreState.StateFlag.END);
                         }
+                    case (int)Bytecode.Types.NOP:
+                        {
+                            Console.WriteLine("NOP");
+                            goto_next();
+                            break;
+                        }
+                    case (int)Bytecode.Types.BIN_ADD:
+                        {
+                            WavyItem left = pop_execstack();
+                            WavyItem right = pop_execstack();
+                            goto_next();
+                            break;
+                        }
                     default:
                         {
                             // We have an invalid opcode
                             err_handler.register_err(make_corestate(CoreState.StateFlag.ERR), ErrorType.INVALID_OP, "Invalid opcode: "+op);
                             err_handler.say_latest();
+                            goto_next();
                             break;
                         }
                 }
@@ -65,16 +91,29 @@ namespace wavynet.vm
             return new CoreState(flag, this.traceback_state);
         }
 
+        // Perform a function call with a trace
+        private void call_trace()
+        {
+            Trace trace = new Trace(this.func_stack.peek());
+            this.traceback_state.push_call_trace(trace);
+        }
+
         // Check if we have reached the end
         public bool end()
         {
             return (pc >= bytecode.Length) || (bytecode[pc].op == (int)Bytecode.Types.END);
         }
 
+        // Called once the current bytecode execution has been completed
+        public void goto_next()
+        {
+            pc++;
+        }
+
         // Returns the next bytecode instance
         public OpcodeInstance get_next()
         {
-            return bytecode[pc++];
+            return bytecode[pc];
         }
 
         // Get the next opcode
@@ -87,6 +126,30 @@ namespace wavynet.vm
         public int get_arg(OpcodeInstance opcode)
         {
             return opcode.arg;
+        }
+
+        // Pop from the current execution stack in use
+        public WavyItem pop_execstack()
+        {
+            // We peek the top of the func_stack [the currently executing function]
+            // We then get the stack and pop the top value
+            return this.func_stack.peek().get_stack().pop();
+        }
+
+        // Pop from the current execution stack in use
+        public WavyItem peek_execstack()
+        {
+            // We peek the top of the func_stack [the currently executing function]
+            // We then get the stack and peek the top value
+            return this.func_stack.peek().get_stack().peek();
+        }
+
+        // Pop from the current execution stack in use
+        public void push_execstack(WavyItem item)
+        {
+            // We peek the top of the func_stack [the currently executing function]
+            // We then get the stack and pop the top value
+            this.func_stack.peek().get_stack().push(item);
         }
     }
 

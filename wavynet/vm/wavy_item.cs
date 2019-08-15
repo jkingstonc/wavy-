@@ -1,12 +1,18 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace wavynet.vm
 {
-    class wavy_item
+    public class WavyItem
     {
+        int id;
+        object value;
+        Type type;
+
+        public WavyItem(int id, object value, Type type)
+        {
+            this.id = id;
+            this.value = value;
+            this.type = type;
+        }
     }
 }

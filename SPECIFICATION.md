@@ -1,12 +1,19 @@
 # W~ Specification
 
 ## Data Structures
+All data objects in Wavy are encapsulated within a WavyItem
+
+### WavyItem
+A WavyItem has 2 members: it's value, and it's type
+All WavyItems that can be accessed in runtime have a type, this can be one of:
+primitive (a subset of types), WavyClass, WavyFunction, WavyObject
 
 ### PRIMITIVES
 - boolean: true/false
 - int: 32 (default) or 16 bit
 - float: 64 (default) or 32 bit
 - strings: Not C like, they exist as a literal
+- lists: Variable length
 
 ### Variables
 - variables are declared with 'var'
@@ -39,10 +46,11 @@ When a wavy runtime is instantated, a wavy core is created
 ## WavyCore
 The wavy core is a sub-system of the wavy vm. It contains a Func Stack, and importantly
 a pointer to a wavy vm. This way, it can access the global Bank to retreive literals.
+WavyCores actually execute code
 
 ## Threads
 Wavy should support multithreadded code. However, threads can only access data
-from the bank
+from the bank, no local variables can be accessed via another thread
 
 ### AccessAssistance
 Subsystem that handles access/modification requests to scopes in multi-threadded scenarios
@@ -55,7 +63,7 @@ Each WavyCore contains:
 ## Memory
 
 ### Scope
-All values are stored within a scope object. This is to make it easier for the wavy runtime
+All WavyItems are stored within a scope object, and can only store WavyItems. This is to make it easier for the wavy runtime
 to deal with memory. Scopes can store any object.
 Values in a scope only are reachable from the current scope, and downwards.
 E.g.
@@ -72,7 +80,7 @@ Each scope contains a ValueTable object, this contains the name and value of var
 
 ### Bank
 The bank is a global scope that is accessed globally by all cores and is located in the vm instance.
-It contains 4 bank types
+It contains 2 bank types: the MBank and the LBank
 
 ### MBank
 Contains a scope of WavyClass definitions (stores class information), WavyFunction definitions (stores function information)

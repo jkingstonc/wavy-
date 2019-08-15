@@ -1,17 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace wavynet.vm
+﻿namespace wavynet.vm
 {
     class Bytecode
     {
         public enum Types
         {
-            // End of a bytecode sequence
-            END = 0,
+            END = 0,    // End of a bytecode sequence
+            NOP = 1,    // No-Operations [we skip this]
+            BIN_ADD,
         }
     }
 
