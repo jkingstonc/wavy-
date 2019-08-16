@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace wavynet.vm
 {
@@ -17,9 +13,9 @@ namespace wavynet.vm
         // Shared error handler
         public ErrorHandler err_handler;
         // Store the operations the core has carried out
-        public TraceBack traceback_state;
+        public TraceBack traceback;
 
-        public OpcodeInstance[] bytecode;
+        public BytecodeInstance[] bytecode;
 
         public FuncStack func_stack;
 
@@ -27,7 +23,7 @@ namespace wavynet.vm
         {
             this.pc = 0;
             this.err_handler = err_handler;
-            this.traceback_state = new TraceBack();
+            this.traceback = new TraceBack();
             this.func_stack = new FuncStack();
 
             setup_func_stack();
@@ -38,7 +34,7 @@ namespace wavynet.vm
             this.func_stack.push_new_frame();
         }
 
-        public void register_sequence(OpcodeInstance[] sequence)
+        public void register_bytecode_seq(BytecodeInstance[] sequence)
         {
             this.bytecode = sequence;
         }
@@ -47,7 +43,7 @@ namespace wavynet.vm
         {
             while(!end())
             {
-                OpcodeInstance opcode = get_next();
+                BytecodeInstance opcode = get_next();
                 int op = get_op(opcode);
                 int arg = get_arg(opcode);
 
@@ -74,8 +70,7 @@ namespace wavynet.vm
                     default:
                         {
                             // We have an invalid opcode
-                            err_handler.register_err(make_corestate(CoreState.StateFlag.ERR), ErrorType.INVALID_OP, "Invalid opcode: "+op);
-                            err_handler.say_latest();
+                            push_err(ErrorType.INVALID_OP, "Invalid opcode: " + op);
                             goto_next();
                             break;
                         }
@@ -85,17 +80,33 @@ namespace wavynet.vm
             return make_corestate(CoreState.StateFlag.END);
         }
 
+        private void push_err(ErrorType type, string msg)
+        {
+            // Register the error with the handler
+            err_handler.register_err(make_corestate(CoreState.StateFlag.ERR), this.traceback, type, msg);
+            // Say the latest error
+            err_handler.say_latest();
+        }
+
+        private void push_err(ErrorType type)
+        {
+            // Register the error with the handler
+            err_handler.register_err(make_corestate(CoreState.StateFlag.ERR), this.traceback, type);
+            // Say the latest error
+            err_handler.say_latest();
+        }
+
         // Generate a corestate
         private CoreState make_corestate(CoreState.StateFlag flag)
         {
-            return new CoreState(flag, this.traceback_state);
+            return new CoreState(flag);
         }
 
         // Perform a function call with a trace
         private void call_trace()
         {
             Trace trace = new Trace(this.func_stack.peek());
-            this.traceback_state.push_call_trace(trace);
+            this.traceback.push_call_trace(trace);
         }
 
         // Check if we have reached the end
@@ -111,19 +122,19 @@ namespace wavynet.vm
         }
 
         // Returns the next bytecode instance
-        public OpcodeInstance get_next()
+        public BytecodeInstance get_next()
         {
             return bytecode[pc];
         }
 
         // Get the next opcode
-        public int get_op(OpcodeInstance opcode)
+        public int get_op(BytecodeInstance opcode)
         {
             return opcode.op;
         }
 
         // Get the next argument
-        public int get_arg(OpcodeInstance opcode)
+        public int get_arg(BytecodeInstance opcode)
         {
             return opcode.arg;
         }
@@ -161,15 +172,14 @@ namespace wavynet.vm
         {
             END = 0,
             ERR = 1,
+
         }
 
-        public TraceBack traceback;
         public StateFlag state_flag;
 
-        public CoreState(StateFlag state_flag, TraceBack traceback)
+        public CoreState(StateFlag state_flag)
         {
             this.state_flag = state_flag;
-            this.traceback = traceback;
         }
     }
 }
