@@ -8,10 +8,10 @@ namespace wavynet.vm
     */
     class Core
     {
+
+        private CoreState state;
         // Program counter
         public int pc;
-        // Shared error handler
-        public ErrorHandler err_handler;
         // Store the operations the core has carried out
         public TraceBack traceback;
 
@@ -19,10 +19,10 @@ namespace wavynet.vm
 
         public FuncStack func_stack;
 
-        public Core(ErrorHandler err_handler)
+        public Core()
         {
+            this.state = CoreState.setup();
             this.pc = 0;
-            this.err_handler = err_handler;
             this.traceback = new TraceBack();
             this.func_stack = new FuncStack();
 
@@ -31,28 +31,31 @@ namespace wavynet.vm
 
         private void setup_func_stack()
         {
-            this.func_stack.push_new_frame();
+            this.call_trace("main");
         }
 
         public void register_bytecode_seq(BytecodeInstance[] sequence)
         {
             this.bytecode = sequence;
+            this.state.opcode_count = sequence.Length;
         }
 
         public CoreState evaluate_sequence()
         {
-            while(!end())
+            while (!end())
             {
                 BytecodeInstance opcode = get_next();
+
                 int op = get_op(opcode);
                 int arg = get_arg(opcode);
 
-                switch(op)
+                switch (op)
                 {
                     case (int)Bytecode.Types.END:
                         {
                             // Return an END state
-                            return make_corestate(CoreState.StateFlag.END);
+                            this.state.currently_interpreting = false;
+                            return this.state;
                         }
                     case (int)Bytecode.Types.NOP:
                         {
@@ -75,44 +78,58 @@ namespace wavynet.vm
                             break;
                         }
                 }
+                // Check if we have had an error
+                if (this.state.had_err)
+                { 
+                    this.state.err_handler.say_latest();
+                    break;
+                }
             }
-            // Return an END state
-            return make_corestate(CoreState.StateFlag.END);
+            return close_core();
         }
 
+        // Called when we are done with this core
+        private CoreState close_core()
+        {
+            // Return an END state
+            this.state.currently_interpreting = false;
+            return this.state;
+        }
+
+        // Push an error to the cores' error handler
         private void push_err(ErrorType type, string msg)
         {
             // Register the error with the handler
-            err_handler.register_err(make_corestate(CoreState.StateFlag.ERR), this.traceback, type, msg);
-            // Say the latest error
-            err_handler.say_latest();
+            this.state.err_handler.register_err(this.state, this.traceback, type, msg);
+            this.state.had_err = true;
         }
 
+        // Push an error to the cores' error handler
         private void push_err(ErrorType type)
         {
             // Register the error with the handler
-            err_handler.register_err(make_corestate(CoreState.StateFlag.ERR), this.traceback, type);
-            // Say the latest error
-            err_handler.say_latest();
-        }
-
-        // Generate a corestate
-        private CoreState make_corestate(CoreState.StateFlag flag)
-        {
-            return new CoreState(flag);
+            this.state.err_handler.register_err(this.state, this.traceback, type);
+            this.state.had_err = true;
         }
 
         // Perform a function call with a trace
-        private void call_trace()
+        // WARNING: This is a dev version, it should not take a string, it should take a ref to a WavyFunction
+        private void call_trace(string name)
         {
-            Trace trace = new Trace(this.func_stack.peek());
+            // First create a new FuncFrame to push to the function stack
+            FuncFrame frame = new FuncFrame(name);
+            // Then push the frame to the FuncStack
+            this.func_stack.push(frame);
+            // Then create a new Trace instance referencing that frame
+            Trace trace = new Trace(frame);
+            // Push the trace to the traceback
             this.traceback.push_call_trace(trace);
         }
 
         // Check if we have reached the end
         public bool end()
         {
-            return (pc >= bytecode.Length) || (bytecode[pc].op == (int)Bytecode.Types.END);
+            return (pc >= state.opcode_count) || (bytecode[pc].op == (int)Bytecode.Types.END);
         }
 
         // Called once the current bytecode execution has been completed
@@ -167,19 +184,23 @@ namespace wavynet.vm
     // Represents a state of the core at a particular time
     public class CoreState
     {
-        // Indicates the state when the CoreState was generated
-        public enum StateFlag
+        public ErrorHandler err_handler;
+        public int opcode_count;
+        public bool currently_interpreting;
+        public int func_depth;
+        public bool had_err;
+        
+        public CoreState(ErrorHandler err_handler, int opcode_count, bool currently_interpreting, int func_depth)
         {
-            END = 0,
-            ERR = 1,
-
+            this.err_handler = err_handler;
+            this.opcode_count = opcode_count;
+            this.currently_interpreting = currently_interpreting;
+            this.func_depth = func_depth;
         }
 
-        public StateFlag state_flag;
-
-        public CoreState(StateFlag state_flag)
+        public static CoreState setup()
         {
-            this.state_flag = state_flag;
+            return new CoreState(new ErrorHandler(), 0, false, 0);
         }
     }
 }

@@ -76,25 +76,27 @@ namespace wavynet.vm
         }
 
         // Push a frame to the stack
-        public void push(FuncFrame obj)
+        public void push(FuncFrame frame)
         {
-            this.stack.push(obj);
-        }
-
-        public void push_new_frame()
-        {
-            push(new FuncFrame());
+            this.stack.push(frame);
         }
     }
 
     // Frame that sits on the FuncStack
     public class FuncFrame
     {
+        private string func_name;
         private ExecStack exec_stack;
 
-        public FuncFrame()
+        public FuncFrame(string func_name)
         {
+            this.func_name = func_name;
             this.exec_stack = new ExecStack();
+        }
+
+        public string get_func_name()
+        {
+            return this.func_name;
         }
 
         public ExecStack get_stack()

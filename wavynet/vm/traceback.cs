@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace wavynet.vm
 {
@@ -12,6 +13,17 @@ namespace wavynet.vm
         {
             this.trace_back.Add(trace);
         }
+
+        public void display()
+        {
+            Console.WriteLine("Traceback");
+            Console.WriteLine("---------");
+            for (int i = 0; i < this.trace_back.Count; i++)
+            {
+                Console.Write(i+": ");
+                this.trace_back[i].display();
+            }
+        }
     }
 
     // A Trace is a representation of when the vm enters a new state, such as a function call, exception interruption etc
@@ -22,6 +34,11 @@ namespace wavynet.vm
         public Trace(FuncFrame frame)
         {
             this.frame = frame;
+        }
+
+        public void display()
+        {
+            Console.WriteLine(this.frame.get_func_name());
         }
 
         public FuncFrame get_frame()

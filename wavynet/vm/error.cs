@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace wavynet.vm
 {
-    class ErrorHandler
+    public class ErrorHandler
     {
         public List<Error> errs = new List<Error>();
         public int count = -1;
@@ -22,8 +22,9 @@ namespace wavynet.vm
 
         public void say_latest()
         {
-            Console.WriteLine(errs[count].get_msg());
-            Console.WriteLine("Traceback:" + errs[count].get_traceback());
+            Console.WriteLine("** ERROR **");
+            Console.WriteLine("'"+errs[count].get_msg()+ "'");
+            errs[count].get_traceback().display();
         }
     }
 
@@ -73,7 +74,10 @@ namespace wavynet.vm
 
     public enum ErrorType
     {
-        // Opcode is an invalid integer
-        INVALID_OP,
+        INVALID_PC_RANGE,   // Program counter is out of range of the bytecode
+        INVALID_OP,         // Opcode is an invalid integer
+        STACK_OVERFLOW,     // Stack upper bound has exceeded
+        STACK_UNDERFLOW,    // Stack lower bound has exceeded
+        INVALID_JUMP,       // When a jump is not to valid areas
     }
 }
