@@ -8,15 +8,15 @@ namespace wavynet.vm
     */
     class Core
     {
-
+        // Holds information about the current state of this core
         private CoreState state;
         // Program counter
         public int pc;
         // Store the operations the core has carried out
         public TraceBack traceback;
-
+        // The bytecode that the core is executing
         public BytecodeInstance[] bytecode;
-
+        // The function stack that this core is using
         public FuncStack func_stack;
 
         public Core()
@@ -29,19 +29,25 @@ namespace wavynet.vm
             setup_func_stack();
         }
 
+        // Setup the core's function stack
         private void setup_func_stack()
         {
-            this.call_trace("main");
+            // We first enter the main func state
+            // Do we want this? Should be use a global exec stack for global state?
+            // this.call_trace("main");
         }
 
+        // Register a bytecode sequence to the core
         public void register_bytecode_seq(BytecodeInstance[] sequence)
         {
             this.bytecode = sequence;
             this.state.opcode_count = sequence.Length;
         }
 
+        // Main fde cycle
         public CoreState evaluate_sequence()
         {
+            // Check we have not reached the end
             while (!end())
             {
                 BytecodeInstance opcode = get_next();
@@ -49,6 +55,7 @@ namespace wavynet.vm
                 int op = get_op(opcode);
                 int arg = get_arg(opcode);
 
+                Console.WriteLine(op.ToString());
                 switch (op)
                 {
                     case (int)Bytecode.Types.END:
@@ -59,7 +66,6 @@ namespace wavynet.vm
                         }
                     case (int)Bytecode.Types.NOP:
                         {
-                            Console.WriteLine("NOP");
                             goto_next();
                             break;
                         }
@@ -198,6 +204,7 @@ namespace wavynet.vm
             this.func_depth = func_depth;
         }
 
+        // Create a fresh CoreState instance
         public static CoreState setup()
         {
             return new CoreState(new ErrorHandler(), 0, false, 0);

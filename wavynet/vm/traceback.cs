@@ -16,12 +16,20 @@ namespace wavynet.vm
 
         public void display()
         {
-            Console.WriteLine("Traceback");
-            Console.WriteLine("---------");
-            for (int i = 0; i < this.trace_back.Count; i++)
+            // First check if we are not in a function / traceback is empty
+            if (this.trace_back.Count > 0)
             {
-                Console.Write(i+": ");
-                this.trace_back[i].display();
+                Console.WriteLine("Traceback");
+                Console.WriteLine("---------");
+                for (int i = 0; i < this.trace_back.Count; i++)
+                {
+                    Console.Write(i + ": ");
+                    this.trace_back[i].display();
+                }
+            }
+            else
+            {
+                Console.WriteLine("Empty traceback");
             }
         }
     }
