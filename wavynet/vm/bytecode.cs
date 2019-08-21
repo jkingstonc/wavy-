@@ -1,11 +1,13 @@
 ﻿namespace wavynet.vm
 {
-    class Bytecode
+    public class Bytecode
     {
-        public enum Types
+        public enum Opcode
         {
             END = 0,    // End of a bytecode sequence
             NOP = 1,    // No-Operations [we skip this]
+
+            POP_EXEC,   // Pop the top item from the execution stack
 
             UN_NOT,         // Binary not
             UN_POSITIVE,    // Positive value of a numeric value
@@ -27,16 +29,18 @@
     }
 
     // An instance of a loaded bytecode instruction
-    struct BytecodeInstance
+    public struct BytecodeInstance
     {
         public int op;
         public int arg;
+        public bool has_arg;
 
         // Instance without arg
         public BytecodeInstance(int op)
         {
             this.op = op;
             this.arg = 0;
+            this.has_arg = false;
         }
 
         // Instance with arg
@@ -44,6 +48,7 @@
         {
             this.op = op;
             this.arg = arg;
+            this.has_arg = true;
         }
     }
 }

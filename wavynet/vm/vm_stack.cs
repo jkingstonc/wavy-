@@ -8,10 +8,13 @@ namespace wavynet.vm
         private int sp;
         private List<T> stack;
 
-        public VM_Stack()
+        private Core core;
+
+        public VM_Stack(Core core)
         {
             this.sp = -1;
             this.stack = new List<T>();
+            this.core = core;
         }
 
         public void push(T item)
@@ -23,14 +26,22 @@ namespace wavynet.vm
                 this.stack[this.sp] = item;          
         }
 
+        // THIS NEEDS ERROR MANAGEMENT
         public T pop()
         {
-            return this.stack[this.sp--];
+            if (!empty())
+                return this.stack[this.sp--];
+            core.push_err(ErrorType.STACK_UNDERFLOW, "Stack underflow!");
+            return default(T);
         }
 
+        // THIS NEEDS ERROR MANAGEMENT
         public T peek()
         {
-            return this.stack[this.sp];
+            if (!empty())
+                return this.stack[this.sp];
+            core.push_err(ErrorType.STACK_UNDERFLOW, "Stack underflow!");
+            return default(T);
         }
 
         // Set the top item on the stack
@@ -39,6 +50,12 @@ namespace wavynet.vm
             this.stack[this.sp] = item;
         }
 
+        public int get_sp()
+        {
+            return this.sp;
+        }
+
+        // THIS NEEDS ERROR MANAGEMENT
         // Set the value of the stack at a given depth
         public void set_n(T item, int n)
         {
@@ -51,16 +68,28 @@ namespace wavynet.vm
                 // depth out of bounds
             }
         }
+
+        // Check if the stack is empty
+        public bool empty()
+        {
+            return this.sp < 0;
+        }
+
+        public int size()
+        {
+            return this.stack.Count;
+        }
     }
 
     // Stack of function frames, containing info about function calls
     public class FuncStack
     {
         private VM_Stack<FuncFrame> stack;
+        public const int MAX_SP = 1024;
 
-        public FuncStack()
+        public FuncStack(Core core)
         {
-             this.stack = new VM_Stack<FuncFrame>();
+             this.stack = new VM_Stack<FuncFrame>(core);
         }
 
         // Pop the top frame from the execution stack
@@ -80,6 +109,12 @@ namespace wavynet.vm
         {
             this.stack.push(frame);
         }
+
+        // Get the Stack Pointer for the frame stack
+        public int get_sp()
+        {
+            return this.stack.get_sp();
+        }
     }
 
     // Frame that sits on the FuncStack
@@ -88,10 +123,10 @@ namespace wavynet.vm
         private string func_name;
         private ExecStack exec_stack;
 
-        public FuncFrame(string func_name)
+        public FuncFrame(Core core, string func_name)
         {
             this.func_name = func_name;
-            this.exec_stack = new ExecStack();
+            this.exec_stack = new ExecStack(core);
         }
 
         public string get_func_name()
@@ -110,15 +145,20 @@ namespace wavynet.vm
     {
         public VM_Stack<ExecFrame> stack;
 
-        public ExecStack()
+        public ExecStack(Core core)
         {
-            this.stack = new VM_Stack<ExecFrame>();
+            this.stack = new VM_Stack<ExecFrame>(core);
         }
 
         // Pop the top item from the execution stack
         public WavyItem pop()
         {
-            return this.stack.pop().get_obj();
+            ExecFrame frame = this.stack.pop();
+            if(frame != null)
+            {
+                return frame.get_obj();
+            }
+            return null;
         }
 
         // Peek the top item from the execution stack

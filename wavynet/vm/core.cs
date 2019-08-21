@@ -6,7 +6,7 @@ namespace wavynet.vm
      * Represents a vm core
      * Performs fde cycle
     */
-    class Core
+    public class Core
     {
         // Holds information about the current state of this core
         private CoreState state;
@@ -19,12 +19,17 @@ namespace wavynet.vm
         // The function stack that this core is using
         public FuncStack func_stack;
 
+        public const int MAX_PC = 2048;
+
+        // FOR DEBUGGING
+        const bool INSTR_DEBUG = true;
+
         public Core()
         {
             this.state = CoreState.setup();
             this.pc = 0;
             this.traceback = new TraceBack();
-            this.func_stack = new FuncStack();
+            this.func_stack = new FuncStack(this);
 
             setup_func_stack();
         }
@@ -34,7 +39,7 @@ namespace wavynet.vm
         {
             // We first enter the main func state
             // Do we want this? Should be use a global exec stack for global state?
-            // this.call_trace("main");
+            this.call_trace("main");
         }
 
         // Register a bytecode sequence to the core
@@ -50,29 +55,46 @@ namespace wavynet.vm
             // Check we have not reached the end
             while (!end())
             {
-                BytecodeInstance opcode = get_next();
+                BytecodeInstance bytecode = get_next();
 
-                int op = get_op(opcode);
-                int arg = get_arg(opcode);
+                int op = get_op(bytecode);
+                int arg=-1;
 
-                Console.WriteLine(op.ToString());
+                if(has_arg(bytecode))
+                    arg = get_arg(bytecode);
+
+                if (INSTR_DEBUG)
+                {
+                    if(has_arg(bytecode))
+                        Console.WriteLine("op: " + (Bytecode.Opcode)op + "arg: " + arg);
+                    else
+                        Console.WriteLine("op: " + op);
+                }
+
                 switch (op)
                 {
-                    case (int)Bytecode.Types.END:
+                    case (int)Bytecode.Opcode.END:
                         {
                             // Return an END state
                             this.state.currently_interpreting = false;
                             return this.state;
                         }
-                    case (int)Bytecode.Types.NOP:
+                    case (int)Bytecode.Opcode.NOP:
                         {
                             goto_next();
                             break;
                         }
-                    case (int)Bytecode.Types.BIN_ADD:
+                    case (int)Bytecode.Opcode.POP_EXEC:
                         {
-                            WavyItem left = pop_execstack();
-                            WavyItem right = pop_execstack();
+                            Console.WriteLine("pop exec!");
+                            pop_exec();
+                            goto_next();
+                            break;
+                        }
+                    case (int)Bytecode.Opcode.BIN_ADD:
+                        {
+                            WavyItem left = pop_exec();
+                            WavyItem right = pop_exec();
                             goto_next();
                             break;
                         }
@@ -80,10 +102,16 @@ namespace wavynet.vm
                         {
                             // We have an invalid opcode
                             push_err(ErrorType.INVALID_OP, "Invalid opcode: " + op);
-                            goto_next();
                             break;
                         }
                 }
+
+                // Program counter is out of range
+                if (pc < 0 || pc > MAX_PC)
+                {
+                    push_err(ErrorType.INVALID_PC_RANGE, "Program Counter is out of range!");
+                }
+
                 // Check if we have had an error
                 if (this.state.had_err)
                 { 
@@ -103,7 +131,7 @@ namespace wavynet.vm
         }
 
         // Push an error to the cores' error handler
-        private void push_err(ErrorType type, string msg)
+        public void push_err(ErrorType type, string msg)
         {
             // Register the error with the handler
             this.state.err_handler.register_err(this.state, this.traceback, type, msg);
@@ -111,7 +139,7 @@ namespace wavynet.vm
         }
 
         // Push an error to the cores' error handler
-        private void push_err(ErrorType type)
+        public void push_err(ErrorType type)
         {
             // Register the error with the handler
             this.state.err_handler.register_err(this.state, this.traceback, type);
@@ -123,7 +151,7 @@ namespace wavynet.vm
         private void call_trace(string name)
         {
             // First create a new FuncFrame to push to the function stack
-            FuncFrame frame = new FuncFrame(name);
+            FuncFrame frame = new FuncFrame(this, name);
             // Then push the frame to the FuncStack
             this.func_stack.push(frame);
             // Then create a new Trace instance referencing that frame
@@ -135,7 +163,7 @@ namespace wavynet.vm
         // Check if we have reached the end
         public bool end()
         {
-            return (pc >= state.opcode_count) || (bytecode[pc].op == (int)Bytecode.Types.END);
+            return (pc >= state.opcode_count) || (bytecode[pc].op == (int)Bytecode.Opcode.END);
         }
 
         // Called once the current bytecode execution has been completed
@@ -151,39 +179,54 @@ namespace wavynet.vm
         }
 
         // Get the next opcode
-        public int get_op(BytecodeInstance opcode)
+        public int get_op(BytecodeInstance bytecode)
         {
-            return opcode.op;
+            return bytecode.op;
         }
 
         // Get the next argument
-        public int get_arg(BytecodeInstance opcode)
+        public int get_arg(BytecodeInstance bytecode)
         {
-            return opcode.arg;
+            return bytecode.arg;
+        }
+
+        public bool has_arg(BytecodeInstance bytecode)
+        {
+            return bytecode.has_arg;
         }
 
         // Pop from the current execution stack in use
-        public WavyItem pop_execstack()
+        public WavyItem pop_exec()
         {
             // We peek the top of the func_stack [the currently executing function]
+            ExecStack exec_stack = top_f_frame().get_stack();
             // We then get the stack and pop the top value
-            return this.func_stack.peek().get_stack().pop();
+            WavyItem item = exec_stack.pop();
+            if (item != null)
+                return item;
+            return null;
         }
 
         // Pop from the current execution stack in use
-        public WavyItem peek_execstack()
+        public WavyItem peek_exec()
         {
             // We peek the top of the func_stack [the currently executing function]
             // We then get the stack and peek the top value
-            return this.func_stack.peek().get_stack().peek();
+            return top_f_frame().get_stack().peek();
         }
 
         // Pop from the current execution stack in use
-        public void push_execstack(WavyItem item)
+        public void push_exec(WavyItem item)
         {
             // We peek the top of the func_stack [the currently executing function]
             // We then get the stack and pop the top value
-            this.func_stack.peek().get_stack().push(item);
+            top_f_frame().get_stack().push(item);
+        }
+
+        // Get the top Function Frame 
+        public FuncFrame top_f_frame()
+        {
+            return this.func_stack.peek();
         }
     }
 
