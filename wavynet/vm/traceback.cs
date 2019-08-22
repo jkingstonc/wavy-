@@ -1,4 +1,9 @@
-﻿using System;
+﻿/*
+ * James Clarke
+ * 22/08/19
+ */
+
+using System;
 using System.Collections.Generic;
 
 namespace wavynet.vm

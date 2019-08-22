@@ -1,4 +1,9 @@
-﻿using System.Collections.Generic;
+﻿/*
+ * James Clarke
+ * 22/08/19
+ */
+
+using System.Collections.Generic;
 
 namespace wavynet.vm.data
 {

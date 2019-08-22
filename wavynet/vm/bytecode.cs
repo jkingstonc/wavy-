@@ -1,4 +1,9 @@
-﻿namespace wavynet.vm
+﻿/*
+ * James Clarke
+ * 22/08/19
+ */
+
+namespace wavynet.vm
 {
     public class Bytecode
     {
