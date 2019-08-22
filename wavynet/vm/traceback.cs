@@ -26,6 +26,7 @@ namespace wavynet.vm
                     Console.Write(i + ": ");
                     this.trace_back[i].display();
                 }
+                Console.WriteLine("---------");
             }
             else
             {

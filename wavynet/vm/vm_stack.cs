@@ -123,10 +123,10 @@ namespace wavynet.vm
         private string func_name;
         private ExecStack exec_stack;
 
-        public FuncFrame(Core core, string func_name)
+        public FuncFrame(Core core, string func_name, ExecStack exec_stack)
         {
             this.func_name = func_name;
-            this.exec_stack = new ExecStack(core);
+            this.exec_stack = exec_stack;
         }
 
         public string get_func_name()
@@ -171,6 +171,13 @@ namespace wavynet.vm
         public void push(WavyItem item)
         {
             this.stack.push(new ExecFrame(item));
+        }
+
+        public static ExecStack deep_copy(Core core, ExecStack original)
+        {
+            ExecStack copy = new ExecStack(core);
+            copy.stack = original.stack;
+            return copy;
         }
     }
 

@@ -8,6 +8,7 @@ namespace wavynet.vm
     */
     public class Core
     {
+        private VM vm;
         // Holds information about the current state of this core
         private CoreState state;
         // Program counter
@@ -18,18 +19,23 @@ namespace wavynet.vm
         public BytecodeInstance[] bytecode;
         // The function stack that this core is using
         public FuncStack func_stack;
+        // The execution stack that this core is using
+        public ExecStack exec_stack;
 
+        // The max Program Counter, this determines program length
         public const int MAX_PC = 2048;
 
         // FOR DEBUGGING
         const bool INSTR_DEBUG = true;
 
-        public Core()
+        public Core(VM vm)
         {
+            this.vm = vm;
             this.state = CoreState.setup();
             this.pc = 0;
             this.traceback = new TraceBack();
             this.func_stack = new FuncStack(this);
+            this.exec_stack = new ExecStack(this);
 
             setup_func_stack();
         }
@@ -39,7 +45,7 @@ namespace wavynet.vm
         {
             // We first enter the main func state
             // Do we want this? Should be use a global exec stack for global state?
-            this.call_trace("main");
+            //this.call_trace("main");
         }
 
         // Register a bytecode sequence to the core
@@ -71,50 +77,53 @@ namespace wavynet.vm
                         Console.WriteLine("op: " + op);
                 }
 
-                switch (op)
+                // Surround the execute phase in a try catch, this is so the vm can return safely to the error handling
+                // without breaking other vm components
+                try
                 {
-                    case (int)Bytecode.Opcode.END:
-                        {
-                            // Return an END state
-                            this.state.currently_interpreting = false;
-                            return this.state;
-                        }
-                    case (int)Bytecode.Opcode.NOP:
-                        {
-                            goto_next();
-                            break;
-                        }
-                    case (int)Bytecode.Opcode.POP_EXEC:
-                        {
-                            Console.WriteLine("pop exec!");
-                            pop_exec();
-                            goto_next();
-                            break;
-                        }
-                    case (int)Bytecode.Opcode.BIN_ADD:
-                        {
-                            WavyItem left = pop_exec();
-                            WavyItem right = pop_exec();
-                            goto_next();
-                            break;
-                        }
-                    default:
-                        {
-                            // We have an invalid opcode
-                            push_err(ErrorType.INVALID_OP, "Invalid opcode: " + op);
-                            break;
-                        }
-                }
+                    switch (op)
+                    {
+                        case (int)Bytecode.Opcode.END:
+                            {
+                                // Return an END state
+                                this.state.currently_interpreting = false;
+                                return this.state;
+                            }
+                        case (int)Bytecode.Opcode.NOP:
+                            {
+                                goto_next();
+                                break;
+                            }
+                        case (int)Bytecode.Opcode.POP_EXEC:
+                            {
+                                pop_exec();
+                                goto_next();
+                                break;
+                            }
+                        case (int)Bytecode.Opcode.BIN_ADD:
+                            {
+                                WavyItem left = pop_exec();
+                                WavyItem right = pop_exec();
+                                goto_next();
+                                break;
+                            }
+                        default:
+                            {
+                                // We have an invalid opcode
+                                push_err(ErrorType.INVALID_OP, "Invalid opcode: " + op);
+                                break;
+                            }
+                    }
 
-                // Program counter is out of range
-                if (pc < 0 || pc > MAX_PC)
+                    // Program counter is out of range
+                    if (pc < 0 || pc > MAX_PC)
+                    {
+                        push_err(ErrorType.INVALID_PC_RANGE, "Program Counter is out of range!");
+                    }
+                }
+                // Currently, we have no use of the VMErrException
+                catch(VMErrException err_exception)
                 {
-                    push_err(ErrorType.INVALID_PC_RANGE, "Program Counter is out of range!");
-                }
-
-                // Check if we have had an error
-                if (this.state.had_err)
-                { 
                     this.state.err_handler.say_latest();
                     break;
                 }
@@ -136,6 +145,7 @@ namespace wavynet.vm
             // Register the error with the handler
             this.state.err_handler.register_err(this.state, this.traceback, type, msg);
             this.state.had_err = true;
+            throw new VMErrException();
         }
 
         // Push an error to the cores' error handler
@@ -144,6 +154,7 @@ namespace wavynet.vm
             // Register the error with the handler
             this.state.err_handler.register_err(this.state, this.traceback, type);
             this.state.had_err = true;
+            throw new VMErrException();
         }
 
         // Perform a function call with a trace
@@ -151,7 +162,7 @@ namespace wavynet.vm
         private void call_trace(string name)
         {
             // First create a new FuncFrame to push to the function stack
-            FuncFrame frame = new FuncFrame(this, name);
+            FuncFrame frame = new FuncFrame(this, name, ExecStack.deep_copy(this, this.exec_stack));
             // Then push the frame to the FuncStack
             this.func_stack.push(frame);
             // Then create a new Trace instance referencing that frame
@@ -198,8 +209,6 @@ namespace wavynet.vm
         // Pop from the current execution stack in use
         public WavyItem pop_exec()
         {
-            // We peek the top of the func_stack [the currently executing function]
-            ExecStack exec_stack = top_f_frame().get_stack();
             // We then get the stack and pop the top value
             WavyItem item = exec_stack.pop();
             if (item != null)
@@ -210,17 +219,13 @@ namespace wavynet.vm
         // Pop from the current execution stack in use
         public WavyItem peek_exec()
         {
-            // We peek the top of the func_stack [the currently executing function]
-            // We then get the stack and peek the top value
-            return top_f_frame().get_stack().peek();
+            return exec_stack.peek();
         }
 
         // Pop from the current execution stack in use
         public void push_exec(WavyItem item)
         {
-            // We peek the top of the func_stack [the currently executing function]
-            // We then get the stack and pop the top value
-            top_f_frame().get_stack().push(item);
+            exec_stack.push(item);
         }
 
         // Get the top Function Frame 
