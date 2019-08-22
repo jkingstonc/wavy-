@@ -31,7 +31,6 @@ namespace wavynet.vm
                 this.stack[this.sp] = item;          
         }
 
-        // THIS NEEDS ERROR MANAGEMENT
         public T pop()
         {
             if (!empty())
@@ -40,7 +39,6 @@ namespace wavynet.vm
             return default(T);
         }
 
-        // THIS NEEDS ERROR MANAGEMENT
         public T peek()
         {
             if (!empty())
@@ -70,7 +68,7 @@ namespace wavynet.vm
             }
             else
             {
-                // depth out of bounds
+                core.push_err(ErrorType.INVALID_SP_RANGE, "Stack Pointer is out of range!");
             }
         }
 

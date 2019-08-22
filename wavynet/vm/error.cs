@@ -82,6 +82,7 @@ namespace wavynet.vm
     {
         INVALID_PC_RANGE,   // Program counter is out of range of the bytecode
         INVALID_OP,         // Opcode is an invalid integer
+        INVALID_SP_RANGE,   // Stack pointer is out of range
         STACK_OVERFLOW,     // Stack upper bound has exceeded
         STACK_UNDERFLOW,    // Stack lower bound has exceeded
         INVALID_JUMP,       // When a jump is not to valid areas
