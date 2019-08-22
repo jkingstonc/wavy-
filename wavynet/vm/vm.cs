@@ -18,7 +18,7 @@ namespace wavynet.vm
 
             BytecodeInstance[] sequence = new BytecodeInstance[]
             {
-                new BytecodeInstance(192),
+                new BytecodeInstance(0x2),
             };
             Core test_core = new Core(this);
             test_core.register_bytecode_seq(sequence);

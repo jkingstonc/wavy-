@@ -2,7 +2,7 @@
 
 namespace wavynet.vm
 {
-    class VMErrException : Exception
+    class CoreErrException : Exception
     {
     }
 }

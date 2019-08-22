@@ -4,10 +4,10 @@
     {
         public enum Opcode
         {
-            END = 0,    // End of a bytecode sequence
-            NOP = 1,    // No-Operations [we skip this]
+            END = 0x0,    // End of a bytecode sequence
+            NOP = 0x1,    // No-Operations [we skip this]
 
-            POP_EXEC,   // Pop the top item from the execution stack
+            POP_EXEC = 0x2,   // Pop the top item from the execution stack
 
             UN_NOT,         // Binary not
             UN_POSITIVE,    // Positive value of a numeric value

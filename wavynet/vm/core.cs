@@ -122,7 +122,7 @@ namespace wavynet.vm
                     }
                 }
                 // Currently, we have no use of the VMErrException
-                catch(VMErrException err_exception)
+                catch(CoreErrException err_exception)
                 {
                     this.state.err_handler.say_latest();
                     break;
@@ -145,7 +145,7 @@ namespace wavynet.vm
             // Register the error with the handler
             this.state.err_handler.register_err(this.state, this.traceback, type, msg);
             this.state.had_err = true;
-            throw new VMErrException();
+            throw new CoreErrException();
         }
 
         // Push an error to the cores' error handler
@@ -154,7 +154,7 @@ namespace wavynet.vm
             // Register the error with the handler
             this.state.err_handler.register_err(this.state, this.traceback, type);
             this.state.had_err = true;
-            throw new VMErrException();
+            throw new CoreErrException();
         }
 
         // Perform a function call with a trace
