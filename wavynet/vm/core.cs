@@ -25,9 +25,6 @@ namespace wavynet.vm
         // The max Program Counter, this determines program length
         public const int MAX_PC = 2048;
 
-        // FOR DEBUGGING
-        const bool INSTR_DEBUG = true;
-
         public Core(VM vm)
         {
             this.vm = vm;
@@ -45,7 +42,10 @@ namespace wavynet.vm
         {
             // We first enter the main func state
             // Do we want this? Should be use a global exec stack for global state?
-            //this.call_trace("main");
+            //if(TRACE_DEBUG)
+            //  this.func_call_trace("main");
+            //else
+            //  this.func_call("main")
         }
 
         // Register a bytecode sequence to the core
@@ -69,7 +69,7 @@ namespace wavynet.vm
                 if(has_arg(bytecode))
                     arg = get_arg(bytecode);
 
-                if (INSTR_DEBUG)
+                if (VM.INSTR_DEBUG)
                 {
                     if(has_arg(bytecode))
                         Console.WriteLine("op: " + (Bytecode.Opcode)op + "arg: " + arg);
@@ -159,16 +159,24 @@ namespace wavynet.vm
 
         // Perform a function call with a trace
         // WARNING: This is a dev version, it should not take a string, it should take a ref to a WavyFunction
-        private void call_trace(string name)
+        private Trace func_call_trace(string name)
+        {
+            // Then create a new Trace instance referencing that frame
+            Trace trace = new Trace(func_call(name));
+            // Push the trace to the traceback
+            this.traceback.push_call_trace(trace);
+            return trace;
+        }
+
+        // Perform a function call
+        // WARNING: This is a dev version, it should not take a string, it should take a ref to a WavyFunction
+        private FuncFrame func_call(string name)
         {
             // First create a new FuncFrame to push to the function stack
             FuncFrame frame = new FuncFrame(this, name, ExecStack.deep_copy(this, this.exec_stack));
             // Then push the frame to the FuncStack
             this.func_stack.push(frame);
-            // Then create a new Trace instance referencing that frame
-            Trace trace = new Trace(frame);
-            // Push the trace to the traceback
-            this.traceback.push_call_trace(trace);
+            return frame;
         }
 
         // Check if we have reached the end

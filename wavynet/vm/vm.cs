@@ -7,6 +7,10 @@ namespace wavynet.vm
         // The data banks this vm uses
         public Bank m_bank, l_bank;
 
+        // FOR DEBUGGING
+        public const bool INSTR_DEBUG = true;
+        public const bool TRACE_DEBUG = true;
+
         public VM()
         {
             this.m_bank = new Bank(Bank.Type.MBank);

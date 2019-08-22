@@ -24,7 +24,8 @@ namespace wavynet.vm
         {
             Console.WriteLine("** ERROR **");
             Console.WriteLine("'"+errs[count].get_msg()+ "'");
-            errs[count].get_traceback().display();
+            if(VM.TRACE_DEBUG)
+                errs[count].get_traceback().display();
         }
     }
 
