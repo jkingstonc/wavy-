@@ -99,8 +99,10 @@ namespace wavynet.vm
                             {
                                 Console.WriteLine("-- TEST --");
                                 // Currently, we want to request an item with an ID
-                                Console.WriteLine(((WavyItem)(this.vm.bank_manager.request_item(this, data.Bank.Type.LBank, 0))).value);
-                                this.vm.bank_manager.release_item(this, data.Bank.Type.LBank, 0);
+                                WavyItem item = request_bank_item(data.Bank.Type.LBank, 0);
+                                Console.WriteLine(item.value);
+                                item.value = "value changed!";
+                                release_bank_item(data.Bank.Type.LBank, 0);
                                 goto_next();
                                 break;
                             }
@@ -135,10 +137,23 @@ namespace wavynet.vm
             return this.state;
         }
 
-        // Called when a thread block occurs
-        public void handle_block()
+        // Request a WavyItem from the BankManager
+        private WavyItem request_bank_item(data.Bank.Type type, int id)
         {
+            // First attempt to request the item from the bank manager
+            WavyItem item = this.vm.bank_manager.request_item(this, type, id);
+            while(this.state.multi_core_state == MultiCoreState.BLOCKED)
+            {
+                // This is a very bad implementation, but currently, we try again until we are not blocked
+                item = this.vm.bank_manager.request_item(this, type, id);
+            }
+            return item;
+        }
 
+        // Release a WavyItem from the BankManager
+        private void release_bank_item(data.Bank.Type type, int id)
+        {
+            this.vm.bank_manager.release_item(this, data.Bank.Type.LBank, 0);
         }
 
         // Used when we may need to register an error (for convenience like a macro)

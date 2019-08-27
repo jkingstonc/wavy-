@@ -39,13 +39,13 @@ namespace wavynet.vm.data
         public WavyItem request_item(Core core, Bank.Type bank_type, int id)
         {
             Bank bank = get_bank_type(bank_type);
-            Dictionary<int, ItemLock> bank_lock = get_lock_type(bank_type);
 
             core.ASSERT_ERR(!bank.contains(id), ErrorType.INVALID_BANK_ID, "Bank item doesn't exist: "+id);
 
             // Dealing with multi threading
             if (VM.MULTI_CORE)
             {
+                Dictionary<int, ItemLock> bank_lock = get_lock_type(bank_type);
                 // First request use of the item
                 if (bank_lock[id].request_use(core.state.id))
                 {
@@ -55,7 +55,6 @@ namespace wavynet.vm.data
                 else
                 {
                     core.state.multi_core_state = MultiCoreState.BLOCKED;
-                    core.handle_block();
                 }
             }
             // Dealing with a single thread
