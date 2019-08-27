@@ -25,7 +25,7 @@ namespace wavynet.vm
             this.count++;
         }
 
-        public void say_latest()
+        public virtual void say_latest()
         {
             Console.WriteLine("** ERROR **");
             Console.WriteLine("'"+errs[count].get_msg()+ "'");
@@ -86,5 +86,7 @@ namespace wavynet.vm
         STACK_OVERFLOW,     // Stack upper bound has exceeded
         STACK_UNDERFLOW,    // Stack lower bound has exceeded
         INVALID_JUMP,       // When a jump is not to valid areas
+
+        INVALID_BANK_ID,    // When an item is requested from the bank doesn't exist
     }
 }

@@ -12,7 +12,12 @@ namespace wavynet.vm.data
     {
         // Bank items are referenced via an integer id
         private Dictionary<int, WavyItem> bank_dict;
-        private Bank.Type type;
+        private Type type;
+
+        public void add_test()
+        {
+            this.bank_dict.Add(0, new WavyItem("lol", typeof(string)));
+        }
 
         public Bank(Type type)
         {
@@ -24,6 +29,17 @@ namespace wavynet.vm.data
         {
             return this.type;
         }
+
+        public WavyItem get_item(int id)
+        {
+            return this.bank_dict[id];
+        }
+
+        public bool contains(int id)
+        {
+            return this.bank_dict.ContainsKey(id);
+        }
+
 
         // Indicates the type of Bank
         // MBank stores Class, Func & Var definitions
