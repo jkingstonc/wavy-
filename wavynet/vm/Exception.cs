@@ -11,4 +11,10 @@ namespace wavynet.vm
     class CoreErrException : Exception
     {
     }
+
+    // This is thrown when the vm encounters a standard core error
+    class VMErrException : Exception
+    {
+
+    }
 }

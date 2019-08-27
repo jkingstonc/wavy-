@@ -4,6 +4,7 @@
  */
 
 using System;
+using System.Threading;
 
 namespace wavynet.vm
 {
@@ -14,6 +15,7 @@ namespace wavynet.vm
     public class Core
     {
         private VM vm;
+        public Thread thread;
         // Holds information about the current state of this core
         public CoreState state;
         // Program counter
@@ -30,21 +32,46 @@ namespace wavynet.vm
         // The max Program Counter, this determines program length
         public const int MAX_PC = 2048;
 
-        public Core(VM vm)
+        public Core(VM vm, CoreManager core_manager, int id)
         {
             this.vm = vm;
-            this.state = CoreState.setup();
+            this.state = CoreState.setup(id);
             this.pc = 0;
             this.traceback = new TraceBack();
             this.func_stack = new FuncStack(this);
             this.exec_stack = new ExecStack(this);
         }
 
-        // Register a bytecode sequence to the core
-        public void register_bytecode_seq(BytecodeInstance[] sequence)
+        // Setup the core thread
+        public void setup(BytecodeInstance[] sequence)
         {
             this.bytecode = sequence;
             this.state.opcode_count = sequence.Length;
+            this.state.multi_core_state = MultiCoreState.READY;
+            this.thread = new Thread(() => this.evaluate_sequence());
+        }
+
+        // Run the vm & start executing code
+        public void run()
+        {
+            this.thread.Start();
+        }
+
+        // Tell the core thread to wait
+        public void wait()
+        {
+
+        }
+
+        // Called when we want to close this core thread
+        public CoreState close()
+        {
+            // Return an END state
+            this.state.currently_interpreting = false;
+            // Change the state of the multi_core_state
+            this.state.multi_core_state = MultiCoreState.DONE;
+            this.thread.Abort();
+            return this.state;
         }
 
         // Main fde cycle
@@ -95,13 +122,12 @@ namespace wavynet.vm
                                 goto_next();
                                 break;
                             }
-                        case (int)Bytecode.Opcode.TEST:
+                        case (int)Bytecode.Opcode.TEST_REQUEST_ITEM:
                             {
-                                Console.WriteLine("-- TEST --");
                                 // Currently, we want to request an item with an ID
                                 WavyItem item = request_bank_item(data.Bank.Type.LBank, 0);
-                                Console.WriteLine(item.value);
-                                item.value = "value changed!";
+                                item.value = ((int)item.value)+1;
+                                Console.WriteLine(this.state.id+": "+item.value);
                                 release_bank_item(data.Bank.Type.LBank, 0);
                                 goto_next();
                                 break;
@@ -109,32 +135,21 @@ namespace wavynet.vm
                         default:
                             {
                                 // We have an invalid opcode
-                                push_err(ErrorType.INVALID_OP, "Invalid opcode: " + op);
+                                push_err(CoreErrorType.INVALID_OP, "Invalid opcode: " + op);
                                 break;
                             }
                     }
 
                     // Program counter is out of range
-                    ASSERT_ERR(pc < 0 || pc > MAX_PC, ErrorType.INVALID_PC_RANGE, "Program Counter is out of range!");
+                    ASSERT_ERR(pc < 0 || pc > MAX_PC, CoreErrorType.INVALID_PC_RANGE, "Program Counter is out of range!");
                 }
-                // Currently, we have no use of the VMErrException
                 catch(CoreErrException)
                 {
                     this.state.err_handler.say_latest();
                     break;
                 }
             }
-            return close_core();
-        }
-
-        // Called when we are done with this core
-        private CoreState close_core()
-        {
-            // Return an END state
-            this.state.currently_interpreting = false;
-            // Change the state of the multi_core_state
-            this.state.multi_core_state = MultiCoreState.DONE;
-            return this.state;
+            return close();
         }
 
         // Request a WavyItem from the BankManager
@@ -157,31 +172,31 @@ namespace wavynet.vm
         }
 
         // Used when we may need to register an error (for convenience like a macro)
-        public void ASSERT_ERR(bool condition, ErrorType type, string msg)
+        public void ASSERT_ERR(bool condition, CoreErrorType type, string msg)
         {
             if (condition)
                 push_err(type, msg);
         }
 
-        public void ASSERT_ERR(bool condition, ErrorType type)
+        public void ASSERT_ERR(bool condition, CoreErrorType type)
         {
             if (condition)
                 push_err(type);
         }
 
         // Push an error to the cores' error handler
-        public void push_err(ErrorType type, string msg)
+        public void push_err(CoreErrorType type, string msg)
         {
             // Register the error with the handler
-            this.state.err_handler.register_err(this.state, this.traceback, type, msg);
+            this.state.err_handler.register_err(new CoreError(this.state, this.traceback, type, msg));
             this.state.had_err = true;
             throw new CoreErrException();
         }
 
-        public void push_err(ErrorType type)
+        public void push_err(CoreErrorType type)
         {
             // Register the error with the handler
-            this.state.err_handler.register_err(this.state, this.traceback, type);
+            this.state.err_handler.register_err(new CoreError(this.state, this.traceback, type));
             this.state.had_err = true;
             throw new CoreErrException();
         }
@@ -274,7 +289,9 @@ namespace wavynet.vm
 
     public enum MultiCoreState
     {
+        
         BLOCKED,    // For when the core has requested data, and has been denied and is waiting
+        NIL,        // For when the core has not registered the bytecode sequence
         READY,      // For when the core has been created, but is not running code yet
         RUNNING,    // For when the core is running code
         DONE,       // For when the core is done execution
@@ -294,17 +311,18 @@ namespace wavynet.vm
         public CoreState(int id, ErrorHandler err_handler, int opcode_count, bool currently_interpreting, int func_depth)
         {
             this.id = id;
-            this.multi_core_state = MultiCoreState.READY; // Initialise the multi_core_state to ready
+            this.multi_core_state = MultiCoreState.NIL; // Initialise the multi_core_state to NIL
             this.err_handler = err_handler;
             this.opcode_count = opcode_count;
             this.currently_interpreting = currently_interpreting;
             this.func_depth = func_depth;
+            this.had_err = false;
         }
 
         // Create a fresh CoreState instance
-        public static CoreState setup()
+        public static CoreState setup(int id)
         {
-            return new CoreState(0, new ErrorHandler(), 0, false, 0);
+            return new CoreState(id, new CoreErrorHandler(), 0, false, 0);
         }
     }
 }

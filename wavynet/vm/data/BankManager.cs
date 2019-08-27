@@ -40,7 +40,7 @@ namespace wavynet.vm.data
         {
             Bank bank = get_bank_type(bank_type);
 
-            core.ASSERT_ERR(!bank.contains(id), ErrorType.INVALID_BANK_ID, "Bank item doesn't exist: "+id);
+            core.ASSERT_ERR(!bank.contains(id), CoreErrorType.INVALID_BANK_ID, "Bank item doesn't exist: "+id);
 
             // Dealing with multi threading
             if (VM.MULTI_CORE)
@@ -49,6 +49,7 @@ namespace wavynet.vm.data
                 // First request use of the item
                 if (bank_lock[id].request_use(core.state.id))
                 {
+                    core.state.multi_core_state = MultiCoreState.RUNNING;
                     return bank.get_item(id);
                 }
                 // If we are denied the request, we are in a BLOCKED state
@@ -74,7 +75,7 @@ namespace wavynet.vm.data
                 Bank bank = get_bank_type(bank_type);
                 Dictionary<int, ItemLock> bank_lock = get_lock_type(bank_type);
 
-                core.ASSERT_ERR(!bank.contains(id), ErrorType.INVALID_BANK_ID, "Bank item doesn't exist, so can't be released: " + id);
+                core.ASSERT_ERR(!bank.contains(id), CoreErrorType.INVALID_BANK_ID, "Bank item doesn't exist, so can't be released: " + id);
                 bank_lock[id].release_use();
             }
         }
@@ -99,7 +100,6 @@ namespace wavynet.vm.data
             return null;
         }
     }
-
 
     public class ItemLock
     {

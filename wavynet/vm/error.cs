@@ -8,47 +8,64 @@ using System.Collections.Generic;
 
 namespace wavynet.vm
 {
-    public class ErrorHandler
+    public abstract class ErrorHandler
     {
         public List<Error> errs = new List<Error>();
         public int count = -1;
 
-        public void register_err(CoreState state, TraceBack traceback, ErrorType type)
+        public void register_err(Error error)
         {
-            this.errs.Add(new Error(state, traceback, type));
+            this.errs.Add(error);
             this.count++;
         }
 
-        public void register_err(CoreState state, TraceBack traceback, ErrorType type, string msg)
-        {
-            this.errs.Add(new Error(state, traceback, type, msg));
-            this.count++;
-        }
+        public abstract void say_latest();
+    }
 
-        public virtual void say_latest()
+    public class CoreErrorHandler : ErrorHandler
+    {
+        public override void say_latest()
         {
-            Console.WriteLine("** ERROR **");
-            Console.WriteLine("'"+errs[count].get_msg()+ "'");
-            if(VM.TRACE_DEBUG)
-                errs[count].get_traceback().display();
+            Console.WriteLine("** CORE ERROR **");
+            Console.WriteLine("'" + errs[count].get_msg() + "'");
+            if (VM.TRACE_DEBUG)
+                ((CoreError)errs[count]).get_traceback().display();
+        }
+    }
+
+    public class VMErrorHandler : ErrorHandler
+    {
+        public override void say_latest()
+        {
+            Console.WriteLine("** VM ERROR **");
+            Console.WriteLine("'" + errs[count].get_msg() + "'");
         }
     }
 
     public class Error
     {
+        protected string msg;
+
+        public string get_msg()
+        {
+            return this.msg;
+        }
+    }
+
+    public class CoreError : Error
+    {
         private CoreState state;
         private TraceBack traceback;
-        private ErrorType type;
-        private string msg= "";
+        private CoreErrorType type;
 
-        public Error(CoreState state, TraceBack traceback, ErrorType type)
+        public CoreError(CoreState state, TraceBack traceback, CoreErrorType type)
         {
             this.state = state;
             this.traceback = traceback;
             this.type = type;
         }
 
-        public Error(CoreState state, TraceBack traceback, ErrorType type, string msg)
+        public CoreError(CoreState state, TraceBack traceback, CoreErrorType type, string msg)
         {
             this.state = state;
             this.traceback = traceback;
@@ -66,19 +83,43 @@ namespace wavynet.vm
             return this.traceback;
         }
 
-        public ErrorType get_type()
+        public CoreErrorType get_type()
         {
             return this.type;
         }
+    }
 
-        public string get_msg()
+    public class VMError : Error
+    {
+        private VMState state;
+        private VMErrorType type;
+
+        public VMError(VMState state, VMErrorType type)
         {
-            return this.msg;
+            this.state = state;
+            this.type = type;
+        }
+
+        public VMError(VMState state, VMErrorType type, string msg)
+        {
+            this.state = state;
+            this.type = type;
+            this.msg = msg;
+        }
+
+        public VMState get_state()
+        {
+            return this.state;
+        }
+
+        public VMErrorType get_type()
+        {
+            return this.type;
         }
     }
-        
 
-    public enum ErrorType
+
+    public enum CoreErrorType
     {
         INVALID_PC_RANGE,   // Program counter is out of range of the bytecode
         INVALID_OP,         // Opcode is an invalid integer
@@ -88,5 +129,10 @@ namespace wavynet.vm
         INVALID_JUMP,       // When a jump is not to valid areas
 
         INVALID_BANK_ID,    // When an item is requested from the bank doesn't exist
+    }
+
+    public enum VMErrorType
+    {
+        INVALID_CORE_COUNT,   // Invalid number of cores created
     }
 }

@@ -33,13 +33,13 @@ namespace wavynet.vm
 
         public T pop()
         {
-            core.ASSERT_ERR(empty(), ErrorType.STACK_UNDERFLOW, "Stack underflow!");
+            core.ASSERT_ERR(empty(), CoreErrorType.STACK_UNDERFLOW, "Stack underflow!");
             return this.stack[this.sp--];
         }
 
         public T peek()
         {
-            core.ASSERT_ERR(empty(), ErrorType.STACK_UNDERFLOW, "Stack underflow!");
+            core.ASSERT_ERR(empty(), CoreErrorType.STACK_UNDERFLOW, "Stack underflow!");
             return this.stack[this.sp];
         }
 
@@ -57,7 +57,7 @@ namespace wavynet.vm
         // Set the value of the stack at a given depth
         public void set_n(T item, int n)
         {
-            core.ASSERT_ERR(n < 0 || n > sp, ErrorType.INVALID_SP_RANGE, "Stack Pointer is out of range!");
+            core.ASSERT_ERR(n < 0 || n > sp, CoreErrorType.INVALID_SP_RANGE, "Stack Pointer is out of range!");
             this.stack[n] = item;
         }
 

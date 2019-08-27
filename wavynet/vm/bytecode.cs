@@ -9,7 +9,7 @@ namespace wavynet.vm
     {
         public enum Opcode
         {
-            TEST = -1,      // Exclusively for testing
+            TEST_REQUEST_ITEM = -1,
 
             END = 0x0,    // End of a bytecode sequence
             NOP = 0x1,    // No-Operations [we skip this]
