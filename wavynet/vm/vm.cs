@@ -3,7 +3,6 @@
  * 22/08/19
  */
 
-using System.Threading;
 using wavynet.vm.data;
 
 namespace wavynet.vm
@@ -58,33 +57,19 @@ namespace wavynet.vm
         }
 
         // Used when we may need to register an error (for convenience like a macro)
-        public void ASSERT_ERR(bool condition, VMErrorType type, string msg)
+        public void ASSERT_ERR(bool condition, VMErrorType type, string msg = null)
         {
             if (condition)
                 push_err(type, msg);
         }
 
-        public void ASSERT_ERR(bool condition, VMErrorType type)
-        {
-            if (condition)
-                push_err(type);
-        }
-
         // Push an error to the cores' error handler
-        public void push_err(VMErrorType type, string msg)
+        public void push_err(VMErrorType type, string msg = null)
         {
             // Register the error with the handler
             this.state.err_handler.register_err(new VMError(this.state, type, msg));
             this.state.had_err = true;
             throw new CoreErrException();
-        }
-
-        public void push_err(VMErrorType type)
-        {
-            // Register the error with the handler
-            this.state.err_handler.register_err(new VMError(this.state, type));
-            this.state.had_err = true;
-            throw new VMErrException();
         }
     }
 

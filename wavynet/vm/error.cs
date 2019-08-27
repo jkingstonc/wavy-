@@ -26,8 +26,9 @@ namespace wavynet.vm
     {
         public override void say_latest()
         {
-            Console.WriteLine("** CORE ERROR **");
-            Console.WriteLine("'" + errs[count].get_msg() + "'");
+            Console.WriteLine("** CORE ERROR ["+ ((CoreError)errs[count]).get_type()+"]**");
+            if (errs[count].get_msg() != null)
+                Console.WriteLine("'" + errs[count].get_msg() + "'");
             if (VM.TRACE_DEBUG)
                 ((CoreError)errs[count]).get_traceback().display();
         }
@@ -37,8 +38,9 @@ namespace wavynet.vm
     {
         public override void say_latest()
         {
-            Console.WriteLine("** VM ERROR **");
-            Console.WriteLine("'" + errs[count].get_msg() + "'");
+            Console.WriteLine("** VM ERROR [" + ((VMError)errs[count]).get_type() + "]**");
+            if(errs[count].get_msg() != null)
+                Console.WriteLine("'" + errs[count].get_msg() + "'");
         }
     }
 

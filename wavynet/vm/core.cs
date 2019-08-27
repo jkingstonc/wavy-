@@ -15,6 +15,7 @@ namespace wavynet.vm
     public class Core
     {
         private VM vm;
+        private CoreManager core_manager;
         public Thread thread;
         // Holds information about the current state of this core
         public CoreState state;
@@ -35,6 +36,7 @@ namespace wavynet.vm
         public Core(VM vm, CoreManager core_manager, int id)
         {
             this.vm = vm;
+            this.core_manager = core_manager;
             this.state = CoreState.setup(id);
             this.pc = 0;
             this.traceback = new TraceBack();
@@ -141,7 +143,7 @@ namespace wavynet.vm
                     }
 
                     // Program counter is out of range
-                    ASSERT_ERR(pc < 0 || pc > MAX_PC, CoreErrorType.INVALID_PC_RANGE, "Program Counter is out of range!");
+                    ASSERT_ERR(pc < 0 || pc > MAX_PC, CoreErrorType.INVALID_PC_RANGE);
                 }
                 catch(CoreErrException)
                 {
@@ -172,31 +174,17 @@ namespace wavynet.vm
         }
 
         // Used when we may need to register an error (for convenience like a macro)
-        public void ASSERT_ERR(bool condition, CoreErrorType type, string msg)
+        public void ASSERT_ERR(bool condition, CoreErrorType type, string msg = null)
         {
             if (condition)
                 push_err(type, msg);
         }
 
-        public void ASSERT_ERR(bool condition, CoreErrorType type)
-        {
-            if (condition)
-                push_err(type);
-        }
-
         // Push an error to the cores' error handler
-        public void push_err(CoreErrorType type, string msg)
+        public void push_err(CoreErrorType type, string msg = null)
         {
             // Register the error with the handler
             this.state.err_handler.register_err(new CoreError(this.state, this.traceback, type, msg));
-            this.state.had_err = true;
-            throw new CoreErrException();
-        }
-
-        public void push_err(CoreErrorType type)
-        {
-            // Register the error with the handler
-            this.state.err_handler.register_err(new CoreError(this.state, this.traceback, type));
             this.state.had_err = true;
             throw new CoreErrException();
         }
