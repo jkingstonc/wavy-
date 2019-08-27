@@ -33,18 +33,14 @@ namespace wavynet.vm
 
         public T pop()
         {
-            if (!empty())
-                return this.stack[this.sp--];
-            core.push_err(ErrorType.STACK_UNDERFLOW, "Stack underflow!");
-            return default(T);
+            core.ASSERT_ERR(empty(), ErrorType.STACK_UNDERFLOW, "Stack underflow!");
+            return this.stack[this.sp--];
         }
 
         public T peek()
         {
-            if (!empty())
-                return this.stack[this.sp];
-            core.push_err(ErrorType.STACK_UNDERFLOW, "Stack underflow!");
-            return default(T);
+            core.ASSERT_ERR(empty(), ErrorType.STACK_UNDERFLOW, "Stack underflow!");
+            return this.stack[this.sp];
         }
 
         // Set the top item on the stack
@@ -58,18 +54,11 @@ namespace wavynet.vm
             return this.sp;
         }
 
-        // THIS NEEDS ERROR MANAGEMENT
         // Set the value of the stack at a given depth
         public void set_n(T item, int n)
         {
-            if (n > 0 && n < sp)
-            {
-                this.stack[n] = item;
-            }
-            else
-            {
-                core.push_err(ErrorType.INVALID_SP_RANGE, "Stack Pointer is out of range!");
-            }
+            core.ASSERT_ERR(n < 0 || n > sp, ErrorType.INVALID_SP_RANGE, "Stack Pointer is out of range!");
+            this.stack[n] = item;
         }
 
         // Check if the stack is empty

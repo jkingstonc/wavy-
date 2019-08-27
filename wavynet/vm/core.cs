@@ -15,7 +15,7 @@ namespace wavynet.vm
     {
         private VM vm;
         // Holds information about the current state of this core
-        private CoreState state;
+        public CoreState state;
         // Program counter
         public int pc;
         // Store the operations the core has carried out
@@ -38,19 +38,6 @@ namespace wavynet.vm
             this.traceback = new TraceBack();
             this.func_stack = new FuncStack(this);
             this.exec_stack = new ExecStack(this);
-
-            setup_func_stack();
-        }
-
-        // Setup the core's function stack
-        private void setup_func_stack()
-        {
-            // We first enter the main func state
-            // Do we want this? Should be use a global exec stack for global state?
-            //if(TRACE_DEBUG)
-            //  this.func_call_trace("main");
-            //else
-            //  this.func_call("main")
         }
 
         // Register a bytecode sequence to the core
@@ -66,6 +53,9 @@ namespace wavynet.vm
             // Check we have not reached the end
             while (!end())
             {
+                // Initialise the state of the multi_core_state
+                this.state.multi_core_state = MultiCoreState.RUNNING;
+
                 BytecodeInstance bytecode = get_next();
 
                 int op = get_op(bytecode);
@@ -121,13 +111,10 @@ namespace wavynet.vm
                     }
 
                     // Program counter is out of range
-                    if (pc < 0 || pc > MAX_PC)
-                    {
-                        push_err(ErrorType.INVALID_PC_RANGE, "Program Counter is out of range!");
-                    }
+                    ASSERT_ERR(pc < 0 || pc > MAX_PC, ErrorType.INVALID_PC_RANGE, "Program Counter is out of range!");
                 }
                 // Currently, we have no use of the VMErrException
-                catch(CoreErrException err_exception)
+                catch(CoreErrException)
                 {
                     this.state.err_handler.say_latest();
                     break;
@@ -141,7 +128,22 @@ namespace wavynet.vm
         {
             // Return an END state
             this.state.currently_interpreting = false;
+            // Change the state of the multi_core_state
+            this.state.multi_core_state = MultiCoreState.DONE;
             return this.state;
+        }
+
+        // Used when we may need to register an error (for convenience like a macro)
+        public void ASSERT_ERR(bool condition, ErrorType type, string msg)
+        {
+            if (condition)
+                push_err(type, msg);
+        }
+
+        public void ASSERT_ERR(bool condition, ErrorType type)
+        {
+            if (condition)
+                push_err(type);
         }
 
         // Push an error to the cores' error handler
@@ -153,7 +155,6 @@ namespace wavynet.vm
             throw new CoreErrException();
         }
 
-        // Push an error to the cores' error handler
         public void push_err(ErrorType type)
         {
             // Register the error with the handler
@@ -248,9 +249,18 @@ namespace wavynet.vm
         }
     }
 
+    public enum MultiCoreState
+    {
+        BLOCKED,    // For when the core has requested data, and has been denied and is waiting
+        READY,      // For when the core has been created, but is not running code yet
+        RUNNING,    // For when the core is running code
+        DONE,       // For when the core is done execution
+    }
+
     // Represents a state of the core at a particular time
     public class CoreState
     {
+        public MultiCoreState multi_core_state;
         public ErrorHandler err_handler;
         public int opcode_count;
         public bool currently_interpreting;
@@ -259,6 +269,7 @@ namespace wavynet.vm
         
         public CoreState(ErrorHandler err_handler, int opcode_count, bool currently_interpreting, int func_depth)
         {
+            this.multi_core_state = MultiCoreState.READY; // Initialise the multi_core_state to ready
             this.err_handler = err_handler;
             this.opcode_count = opcode_count;
             this.currently_interpreting = currently_interpreting;
