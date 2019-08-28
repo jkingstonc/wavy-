@@ -16,6 +16,7 @@ namespace wavynet.vm
     {
         private VM vm;
         public Thread thread;
+        public EventWaitHandle handle;
         // Holds information about the current state of this core
         public CoreState state;
         // Program counter
@@ -48,19 +49,20 @@ namespace wavynet.vm
             this.bytecode = sequence;
             this.state.opcode_count = sequence.Length;
             this.state.multi_core_state = MultiCoreState.READY;
-            this.thread = new Thread(() => this.evaluate_sequence());
+            // Create a new EventWaitHandle to allow us to check when this core is finished
+            this.handle = new EventWaitHandle(false, EventResetMode.ManualReset);
+            // Create a new Thread and accociate the handle with it
+            this.thread = new Thread(() => {
+
+                this.evaluate_sequence();
+                this.handle.Set();
+                });
         }
 
-        // Run the vm & start executing code
+        // Run the core & start executing code
         public void run()
         {
             this.thread.Start();
-        }
-
-        // Tell the core thread to wait
-        public void wait()
-        {
-
         }
 
         // Called when we want to close this core thread
@@ -131,6 +133,15 @@ namespace wavynet.vm
                                 goto_next();
                                 break;
                             }
+                        case (int)Bytecode.Opcode.SPAWN_CORE:
+                            {
+                                this.vm.core_manager.create_and_run(new BytecodeInstance[]
+                                {
+                                    new BytecodeInstance(-122),
+                                });
+                                goto_next();
+                                break;
+                            }
                         default:
                             {
                                 // We have an invalid opcode
@@ -142,8 +153,10 @@ namespace wavynet.vm
                     // Program counter is out of range
                     ASSERT_ERR(pc < 0 || pc > MAX_PC, CoreErrorType.INVALID_PC_RANGE);
                 }
-                catch(CoreErrException)
+                catch(CoreErrException e)
                 {
+                    if(e.err.is_fatal())
+                        this.vm.core_manager.isolate(this.state.id);
                     this.state.err_handler.say_latest();
                     break;
                 }
@@ -180,10 +193,11 @@ namespace wavynet.vm
         // Push an error to the cores' error handler
         public void push_err(CoreErrorType type, string msg = null)
         {
+            CoreError err = new CoreError(this.state, this.traceback, type, msg);
             // Register the error with the handler
-            this.state.err_handler.register_err(new CoreError(this.state, this.traceback, type, msg));
+            this.state.err_handler.register_err(err);
             this.state.had_err = true;
-            throw new CoreErrException();
+            throw new CoreErrException(err);
         }
 
         // Perform a function call with a trace
@@ -211,7 +225,7 @@ namespace wavynet.vm
         // Check if we have reached the end
         public bool end()
         {
-            return (pc >= state.opcode_count) || (bytecode[pc].op == (int)Bytecode.Opcode.END);
+            return (this.state.multi_core_state == MultiCoreState.ABORTED) || (this.state.multi_core_state == MultiCoreState.DONE) || (pc >= state.opcode_count) || (bytecode[pc].op == (int)Bytecode.Opcode.END);
         }
 
         // Called once the current bytecode execution has been completed
@@ -280,6 +294,7 @@ namespace wavynet.vm
         READY,      // For when the core has been created, but is not running code yet
         RUNNING,    // For when the core is running code
         DONE,       // For when the core is done execution
+        ABORTED,
     }
 
     // Represents a state of the core at a particular time

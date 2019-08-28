@@ -9,6 +9,7 @@ namespace wavynet.vm
     {
         public enum Opcode
         {
+            SPAWN_CORE        = -2,
             TEST_REQUEST_ITEM = -1,
 
             END = 0x0,    // End of a bytecode sequence

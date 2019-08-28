@@ -26,7 +26,7 @@ namespace wavynet.vm
     {
         public override void say_latest()
         {
-            Console.WriteLine("** CORE ERROR ["+ ((CoreError)errs[count]).get_type()+"]**");
+            Console.WriteLine("** CORE "+ ((CoreError)errs[count]).get_state().id+ " ERROR ["+ ((CoreError)errs[count]).get_type()+"]**");
             if (errs[count].get_msg() != null)
                 Console.WriteLine("'" + errs[count].get_msg() + "'");
             if (VM.TRACE_DEBUG)
@@ -59,19 +59,15 @@ namespace wavynet.vm
         private CoreState state;
         private TraceBack traceback;
         private CoreErrorType type;
+        private bool fatal;
 
-        public CoreError(CoreState state, TraceBack traceback, CoreErrorType type)
+        public CoreError(CoreState state, TraceBack traceback, CoreErrorType type, string msg = null)
         {
             this.state = state;
             this.traceback = traceback;
             this.type = type;
-        }
-
-        public CoreError(CoreState state, TraceBack traceback, CoreErrorType type, string msg)
-        {
-            this.state = state;
-            this.traceback = traceback;
-            this.type = type;
+            // Check if the error is fatal by checking the error type
+            this.fatal = ((int)type) > 0;
             this.msg = msg;
         }
 
@@ -89,6 +85,11 @@ namespace wavynet.vm
         {
             return this.type;
         }
+
+        public bool is_fatal()
+        {
+            return this.fatal;
+        }
     }
 
     public class VMError : Error
@@ -96,13 +97,7 @@ namespace wavynet.vm
         private VMState state;
         private VMErrorType type;
 
-        public VMError(VMState state, VMErrorType type)
-        {
-            this.state = state;
-            this.type = type;
-        }
-
-        public VMError(VMState state, VMErrorType type, string msg)
+        public VMError(VMState state, VMErrorType type, string msg = null)
         {
             this.state = state;
             this.type = type;

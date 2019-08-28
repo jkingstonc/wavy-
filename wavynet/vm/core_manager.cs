@@ -4,6 +4,7 @@
  */
 
 using System.Collections.Generic;
+using System.Threading;
 
 namespace wavynet.vm
 {
@@ -23,12 +24,31 @@ namespace wavynet.vm
         }
 
         // Abort all active cores if we encounter a fatal error
-        public void abort_all()
+        public void abort_all(int id = -1)
         {
+            // If the id doesn't match, stop the core by flagging it's multi core state to ABORTED
             foreach(KeyValuePair<int, Core> pair in this.core_pool)
             {
-                pair.Value.thread.Abort();
+                if (id != pair.Key)
+                {
+                    pair.Value.state.multi_core_state = MultiCoreState.ABORTED;
+                }
             }
+        }
+
+        // Called by an executing core to stop all other cores
+        public void isolate(int id)
+        {
+            abort_all(id);
+        }
+
+        // Create and run a new core instance
+        public void create_and_run(BytecodeInstance[] sequence)
+        {
+            int id = add_core();
+            setup_core(id, sequence);
+            start_core(id);
+            WaitHandle.WaitAll(new WaitHandle[] { get_core(id).handle });
         }
 
         // Add a new core to the pool
@@ -51,8 +71,7 @@ namespace wavynet.vm
         // Start the core running
         public int start_core(int id)
         {
-            this.core_pool[id].thread.Start();
-            this.core_pool[id].thread.Join();
+            this.core_pool[id].run();
             return id;
         }
 
@@ -62,10 +81,30 @@ namespace wavynet.vm
             this.core_pool[id].close();
         }
 
+        // This is used when the vm initially wants to spawn multiple cores
+        // This should not be used from within a core
+        public void join_all_cores()
+        {
+
+            WaitHandle[] handles = new WaitHandle[this.core_pool.Count];
+            int counter = 0;
+            foreach (KeyValuePair<int, Core> pair in this.core_pool)
+            {
+                handles[counter] = pair.Value.handle;
+                counter++;
+            }
+            WaitHandle.WaitAll(handles);
+        }
+
         // Generate a new id
         private int gen_id()
         {
             return next_id;
+        }
+
+        private Core get_core(int id)
+        {
+            return this.core_pool[id];
         }
     }
 }
