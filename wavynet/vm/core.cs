@@ -72,6 +72,7 @@ namespace wavynet.vm
             this.state.currently_interpreting = false;
             // Change the state of the multi_core_state
             this.state.multi_core_state = MultiCoreState.DONE;
+            this.vm.core_manager.close_core(this.state.id);
             return this.state;
         }
 
@@ -128,17 +129,28 @@ namespace wavynet.vm
                                 // Currently, we want to request an item with an ID
                                 WavyItem item = request_bank_item(data.Bank.Type.LBank, 0);
                                 item.value = ((int)item.value)+1;
-                                Console.WriteLine(this.state.id+": "+item.value);
+                                Console.WriteLine("core {"+this.state.id+"}: "+item.value);
                                 release_bank_item(data.Bank.Type.LBank, 0);
                                 goto_next();
                                 break;
                             }
                         case (int)Bytecode.Opcode.SPAWN_CORE:
                             {
-                                this.vm.core_manager.create_and_run(new BytecodeInstance[]
+                                this.vm.core_manager.new_core_event += this.vm.core_manager.create_and_run;
+                                this.vm.core_manager.new_core_event?.Invoke(this, new CoreCreateEventArgs(this.state.id, 
+                                    new BytecodeInstance[]
                                 {
-                                    new BytecodeInstance(-122),
-                                });
+                                    new BytecodeInstance(-1),
+                                    new BytecodeInstance(-1),
+                                    new BytecodeInstance(-1),
+                                    new BytecodeInstance(-1),
+                                    new BytecodeInstance(-1),
+                                    new BytecodeInstance(-1),
+                                    new BytecodeInstance(-1),
+                                    new BytecodeInstance(-1),
+                                    new BytecodeInstance(-1),
+                                }));
+
                                 goto_next();
                                 break;
                             }
@@ -180,7 +192,7 @@ namespace wavynet.vm
         // Release a WavyItem from the BankManager
         private void release_bank_item(data.Bank.Type type, int id)
         {
-            this.vm.bank_manager.release_item(this, data.Bank.Type.LBank, 0);
+            this.vm.bank_manager.release_item(this, type, 0);
         }
 
         // Used when we may need to register an error (for convenience like a macro)

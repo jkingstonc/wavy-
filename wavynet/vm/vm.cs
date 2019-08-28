@@ -50,21 +50,20 @@ namespace wavynet.vm
 
                 BytecodeInstance[] sequence = new BytecodeInstance[]
                 {
-                    new BytecodeInstance(-1),
-                    new BytecodeInstance(-1),
-                    new BytecodeInstance(-1),
-                    new BytecodeInstance(-1),
-                    new BytecodeInstance(-1),
-                    new BytecodeInstance(-1),
-                    new BytecodeInstance(-1),
-                    new BytecodeInstance(-1),
-                    new BytecodeInstance(-1),
-                    new BytecodeInstance(-1),
+                                    new BytecodeInstance(-2),
+                                    new BytecodeInstance(-1),
+                                    new BytecodeInstance(-1),
+                                    new BytecodeInstance(-1),
+                                    new BytecodeInstance(-1),
+                                    new BytecodeInstance(-1),
+                                    new BytecodeInstance(-1),
+                                    new BytecodeInstance(-1),
+                                    new BytecodeInstance(-1),
                 };
 
                 this.core_manager = new CoreManager(this);
                 // Create and run the main core
-                this.core_manager.create_and_run(sequence);
+                this.core_manager.create_and_run(this, new CoreCreateEventArgs(-1, sequence));
                 // Join all core threads to this (wait for all cores to finish)
                 this.core_manager.join_all_cores();
             }

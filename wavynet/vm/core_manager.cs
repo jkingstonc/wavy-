@@ -3,6 +3,7 @@
  * 27/08/19
  */
 
+using System;
 using System.Collections.Generic;
 using System.Threading;
 
@@ -13,6 +14,25 @@ namespace wavynet.vm
     */
     public class CoreManager
     {
+        // This is the event which handles adding a new core to the core_pool
+        public EventHandler new_core_event;
+        public event EventHandler NewCoreEvent
+        {
+            add
+            {
+                new_core_event -= value;
+                new_core_event += value;
+            }
+
+            remove
+            {
+                new_core_event -= value;
+            }
+        }
+
+        // The event which is triggered when the vm should end
+        ManualResetEvent end_vm_event = new ManualResetEvent(false);
+
         private VM vm;
         private Dictionary<int, Core> core_pool;
         private int next_id = 0;
@@ -43,12 +63,11 @@ namespace wavynet.vm
         }
 
         // Create and run a new core instance
-        public void create_and_run(BytecodeInstance[] sequence)
+        public void create_and_run(object sender, EventArgs args)
         {
             int id = add_core();
-            setup_core(id, sequence);
+            setup_core(id, ((CoreCreateEventArgs)args).bytecode);
             start_core(id);
-            WaitHandle.WaitAll(new WaitHandle[] { get_core(id).handle });
         }
 
         // Add a new core to the pool
@@ -78,24 +97,19 @@ namespace wavynet.vm
         // Close the core running
         public void close_core(int id)
         {
-            this.core_pool[id].close();
+            this.core_pool.Remove(id);
+            // If we have done with all cores, trigger the close vm event
+            if (this.core_pool.Count == 0)
+                this.end_vm_event.Set();
         }
 
-        // This is used when the vm initially wants to spawn multiple cores
-        // This should not be used from within a core
+        // This is used to join the vm thread to the core pool
+        // We wait until the core_pool is empty and then we can close the vm
         public void join_all_cores()
         {
-
-            WaitHandle[] handles = new WaitHandle[this.core_pool.Count];
-            int counter = 0;
-            foreach (KeyValuePair<int, Core> pair in this.core_pool)
-            {
-                handles[counter] = pair.Value.handle;
-                counter++;
-            }
-            // Check we actually have a core to wait for
-            vm.ASSERT_ERR(!(counter > 0), VMErrorType.INVALID_CORE_COUNT, "Cannot wait for 0 thread handles!");
-            WaitHandle.WaitAll(handles);
+            // This thread will block here until the close_vm_event is sent.
+            end_vm_event.WaitOne();
+            end_vm_event.Reset();
         }
 
         // Generate a new id
@@ -103,10 +117,20 @@ namespace wavynet.vm
         {
             return next_id;
         }
+    }
 
-        private Core get_core(int id)
+    /* 
+     * Contains information about the creation of a new core
+    */
+    public class CoreCreateEventArgs : EventArgs
+    {
+        public int creator_id { get; set; }
+        public BytecodeInstance[] bytecode { get; set; }
+
+        public CoreCreateEventArgs(int creator_id, BytecodeInstance[] bytecode)
         {
-            return this.core_pool[id];
+            this.creator_id = creator_id;
+            this.bytecode = bytecode;
         }
     }
 }
