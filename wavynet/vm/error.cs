@@ -118,18 +118,19 @@ namespace wavynet.vm
 
     public enum CoreErrorType
     {
-        INVALID_PC_RANGE,   // Program counter is out of range of the bytecode
-        INVALID_OP,         // Opcode is an invalid integer
-        INVALID_SP_RANGE,   // Stack pointer is out of range
-        STACK_OVERFLOW,     // Stack upper bound has exceeded
-        STACK_UNDERFLOW,    // Stack lower bound has exceeded
-        INVALID_JUMP,       // When a jump is not to valid areas
+        INVALID_PC_RANGE,           // Program counter is out of range of the bytecode
+        INVALID_OP,                 // Opcode is an invalid integer
+        INVALID_SP_RANGE,           // Stack pointer is out of range
+        STACK_OVERFLOW,             // Stack upper bound has exceeded
+        STACK_UNDERFLOW,            // Stack lower bound has exceeded
+        INVALID_JUMP,               // When a jump is not to valid areas
 
-        INVALID_BANK_ID,    // When an item is requested from the bank doesn't exist
+        INVALID_BANK_ID,            // When an item is requested from the bank doesn't exist
+        INVALID_MULTICORE_STATE,    // When a multicore operation fails due to an invalid multicore state
     }
 
     public enum VMErrorType
     {
-        INVALID_CORE_COUNT,   // Invalid number of cores created
+        INVALID_CORE_COUNT,         // Invalid number of cores created
     }
 }

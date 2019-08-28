@@ -30,14 +30,14 @@ namespace wavynet.vm
             this.thread = new Thread(() => run());
         }
 
-        public void start_vm()
+        public void start()
         {
             this.thread.Start();
         }
 
-        public Thread get_thread()
+        private void close()
         {
-            return this.thread;
+            System.Console.WriteLine("# closing vm #");
         }
 
         private void run()
@@ -48,21 +48,15 @@ namespace wavynet.vm
                 this.bank_manager = new BankManager();
                 this.bank_manager.setup_l_test();
 
-                BytecodeInstance[] sequence = new BytecodeInstance[]
+                int size = 10;
+                BytecodeInstance[] sequence = new BytecodeInstance[size];
+                for(var i =0;i< size; i++)
                 {
-                                    new BytecodeInstance(-2),
-                                    new BytecodeInstance(-1),
-                                    new BytecodeInstance(-1),
-                                    new BytecodeInstance(-1),
-                                    new BytecodeInstance(-1),
-                                    new BytecodeInstance(-1),
-                                    new BytecodeInstance(-1),
-                                    new BytecodeInstance(-1),
-                                    new BytecodeInstance(-1),
-                };
-
+                    sequence[i]= new BytecodeInstance(-1);
+                }
                 this.core_manager = new CoreManager(this);
                 // Create and run the main core
+                this.core_manager.create_and_run(this, new CoreCreateEventArgs(-1, sequence));
                 this.core_manager.create_and_run(this, new CoreCreateEventArgs(-1, sequence));
                 // Join all core threads to this (wait for all cores to finish)
                 this.core_manager.join_all_cores();
@@ -73,6 +67,7 @@ namespace wavynet.vm
                 this.core_manager.abort_all();
                 this.state.err_handler.say_latest();
             }
+            close();
         }
 
         // Used when we may need to register an error (for convenience like a macro)

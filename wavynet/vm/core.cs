@@ -65,6 +65,20 @@ namespace wavynet.vm
             this.thread.Start();
         }
 
+        // When we want the core to suspend execution
+        public void suspend()
+        {
+            this.ASSERT_ERR(this.state.multi_core_state == MultiCoreState.SUSPENDED, CoreErrorType.INVALID_MULTICORE_STATE, "Cannot suspend core that has already been suspended!");
+            this.state.multi_core_state = MultiCoreState.SUSPENDED;
+        }
+
+        // When we want to resume the core operation
+        public void resume()
+        {
+            this.ASSERT_ERR(this.state.multi_core_state != MultiCoreState.SUSPENDED, CoreErrorType.INVALID_MULTICORE_STATE, "Cannot resume core that has not been suspended!");
+            this.state.multi_core_state = MultiCoreState.RUNNING;
+        }
+
         // Called when we want to close this core thread
         public CoreState close()
         {
@@ -85,92 +99,96 @@ namespace wavynet.vm
             // Check we have not reached the end
             while (!end())
             {
-                BytecodeInstance bytecode = get_next();
-
-                int op = get_op(bytecode);
-                int arg=-1;
-
-                if(has_arg(bytecode))
-                    arg = get_arg(bytecode);
-
-                if (VM.INSTR_DEBUG)
+                // Only execute if the core has not been suspended
+                if (this.state.multi_core_state != MultiCoreState.SUSPENDED)
                 {
-                    if(has_arg(bytecode))
-                        Console.WriteLine("op: " + (Bytecode.Opcode)op + "arg: " + arg);
-                    else
-                        Console.WriteLine("op: " + op);
-                }
+                    BytecodeInstance bytecode = get_next();
 
-                // Surround the execute phase in a try catch, this is so the vm can return safely to the error handling
-                // without breaking other vm components
-                try
-                {
-                    switch (op)
+                    int op = get_op(bytecode);
+                    int arg = -1;
+
+                    if (has_arg(bytecode))
+                        arg = get_arg(bytecode);
+
+                    if (VM.INSTR_DEBUG)
                     {
-                        case (int)Bytecode.Opcode.END:
-                            {
-                                // Return an END state
-                                this.state.currently_interpreting = false;
-                                return this.state;
-                            }
-                        case (int)Bytecode.Opcode.NOP:
-                            {
-                                goto_next();
-                                break;
-                            }
-                        case (int)Bytecode.Opcode.POP_EXEC:
-                            {
-                                pop_exec();
-                                goto_next();
-                                break;
-                            }
-                        case (int)Bytecode.Opcode.TEST_REQUEST_ITEM:
-                            {
-                                // Currently, we want to request an item with an ID
-                                WavyItem item = request_bank_item(data.Bank.Type.LBank, 0);
-                                item.value = ((int)item.value)+1;
-                                Console.WriteLine("core {"+this.state.id+"}: "+item.value);
-                                release_bank_item(data.Bank.Type.LBank, 0);
-                                goto_next();
-                                break;
-                            }
-                        case (int)Bytecode.Opcode.SPAWN_CORE:
-                            {
-                                this.vm.core_manager.new_core_event += this.vm.core_manager.create_and_run;
-                                this.vm.core_manager.new_core_event?.Invoke(this, new CoreCreateEventArgs(this.state.id, 
-                                    new BytecodeInstance[]
-                                {
-                                    new BytecodeInstance(-1),
-                                    new BytecodeInstance(-1),
-                                    new BytecodeInstance(-1),
-                                    new BytecodeInstance(-1),
-                                    new BytecodeInstance(-1),
-                                    new BytecodeInstance(-1),
-                                    new BytecodeInstance(-1),
-                                    new BytecodeInstance(-1),
-                                    new BytecodeInstance(-1),
-                                }));
-
-                                goto_next();
-                                break;
-                            }
-                        default:
-                            {
-                                // We have an invalid opcode
-                                push_err(CoreErrorType.INVALID_OP, "Invalid opcode: " + op);
-                                break;
-                            }
+                        if (has_arg(bytecode))
+                            Console.WriteLine("op: " + (Bytecode.Opcode)op + "arg: " + arg);
+                        else
+                            Console.WriteLine("op: " + op);
                     }
 
-                    // Program counter is out of range
-                    ASSERT_ERR(pc < 0 || pc > MAX_PC, CoreErrorType.INVALID_PC_RANGE);
-                }
-                catch(CoreErrException e)
-                {
-                    if(e.err.is_fatal())
-                        this.vm.core_manager.isolate(this.state.id);
-                    this.state.err_handler.say_latest();
-                    break;
+                    // Surround the execute phase in a try catch, this is so the vm can return safely to the error handling
+                    // without breaking other vm components
+                    try
+                    {
+                        switch (op)
+                        {
+                            case (int)Bytecode.Opcode.END:
+                                {
+                                    // Return an END state
+                                    this.state.currently_interpreting = false;
+                                    return this.state;
+                                }
+                            case (int)Bytecode.Opcode.NOP:
+                                {
+                                    goto_next();
+                                    break;
+                                }
+                            case (int)Bytecode.Opcode.POP_EXEC:
+                                {
+                                    pop_exec();
+                                    goto_next();
+                                    break;
+                                }
+                            case (int)Bytecode.Opcode.TEST_REQUEST_ITEM:
+                                {
+                                    // Currently, we want to request an item with an ID
+                                    WavyItem item = request_bank_item(data.Bank.Type.LBank, 0);
+                                    item.value = ((int)item.value) + 1;
+                                    Console.WriteLine("core {" + this.state.id + "}: " + item.value);
+                                    release_bank_item(data.Bank.Type.LBank, 0);
+                                    goto_next();
+                                    break;
+                                }
+                            case (int)Bytecode.Opcode.SPAWN_CORE:
+                                {
+                                    this.vm.core_manager.new_core_event += this.vm.core_manager.create_and_run;
+                                    this.vm.core_manager.new_core_event?.Invoke(this, new CoreCreateEventArgs(this.state.id,
+                                        new BytecodeInstance[]
+                                    {
+                                    new BytecodeInstance(-1),
+                                    new BytecodeInstance(-1),
+                                    new BytecodeInstance(-1),
+                                    new BytecodeInstance(-1),
+                                    new BytecodeInstance(-1),
+                                    new BytecodeInstance(-1),
+                                    new BytecodeInstance(-1),
+                                    new BytecodeInstance(-1),
+                                    new BytecodeInstance(-1),
+                                    }));
+
+                                    goto_next();
+                                    break;
+                                }
+                            default:
+                                {
+                                    // We have an invalid opcode
+                                    push_err(CoreErrorType.INVALID_OP, "Invalid opcode: " + op);
+                                    break;
+                                }
+                        }
+
+                        // Program counter is out of range
+                        ASSERT_ERR(pc < 0 || pc > MAX_PC, CoreErrorType.INVALID_PC_RANGE);
+                    }
+                    catch (CoreErrException e)
+                    {
+                        if (e.err.is_fatal())
+                            this.vm.core_manager.isolate(this.state.id);
+                        this.state.err_handler.say_latest();
+                        break;
+                    }
                 }
             }
             return close();
@@ -307,6 +325,7 @@ namespace wavynet.vm
         RUNNING,    // For when the core is running code
         DONE,       // For when the core is done execution
         ABORTED,
+        SUSPENDED,
     }
 
     // Represents a state of the core at a particular time
