@@ -16,19 +16,6 @@ namespace wavynet.vm
     {
         // This is the event which handles adding a new core to the core_pool
         public EventHandler new_core_event;
-        public event EventHandler NewCoreEvent
-        {
-            add
-            {
-                new_core_event -= value;
-                new_core_event += value;
-            }
-
-            remove
-            {
-                new_core_event -= value;
-            }
-        }
 
         // The event which is triggered when the vm should end
         ManualResetEvent end_vm_event = new ManualResetEvent(false);
