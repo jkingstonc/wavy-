@@ -16,7 +16,6 @@ namespace wavynet.vm
     {
         private VM vm;
         public Thread thread;
-        public EventWaitHandle handle;
         // Holds information about the current state of this core
         public CoreState state;
         // Program counter
@@ -50,12 +49,9 @@ namespace wavynet.vm
             this.state.opcode_count = sequence.Length;
             this.state.multi_core_state = MultiCoreState.READY;
             // Create a new EventWaitHandle to allow us to check when this core is finished
-            this.handle = new EventWaitHandle(false, EventResetMode.ManualReset);
             // Create a new Thread and accociate the handle with it
             this.thread = new Thread(() => {
-
                 this.evaluate_sequence();
-                this.handle.Set();
                 });
         }
 
@@ -152,7 +148,7 @@ namespace wavynet.vm
                             default:
                                 {
                                     // We have an invalid opcode
-                                    push_err(CoreErrorType.INVALID_OP, "Invalid opcode: " + op);
+                                    push_err(CoreErrorType.INVALID_OP, "op: " + op);
                                     break;
                                 }
                         }
