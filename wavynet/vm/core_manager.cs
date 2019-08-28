@@ -70,6 +70,7 @@ namespace wavynet.vm
         // Setup the core, after it has been registered to the pool
         public int setup_core(int id, BytecodeInstance[] sequence)
         {
+            vm.ASSERT_ERR(!(this.core_pool.ContainsKey(id)), VMErrorType.INVALID_CORE_ID, "id: "+id);
             this.core_pool[id].setup(sequence);
             return id;
         }
@@ -77,6 +78,7 @@ namespace wavynet.vm
         // Start the core running
         public int start_core(int id)
         {
+            vm.ASSERT_ERR(!(this.core_pool.ContainsKey(id)), VMErrorType.INVALID_CORE_ID, "id: " + id);
             this.core_pool[id].run();
             return id;
         }

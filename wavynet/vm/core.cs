@@ -141,33 +141,11 @@ namespace wavynet.vm
                                     goto_next();
                                     break;
                                 }
-                            case (int)Bytecode.Opcode.TEST_REQUEST_ITEM:
+                            case (int)Bytecode.Opcode.LD_LIT:
                                 {
-                                    // Currently, we want to request an item with an ID
-                                    WavyItem item = request_bank_item(data.Bank.Type.LBank, 0);
-                                    item.value = ((int)item.value) + 1;
-                                    Console.WriteLine("core {" + this.state.id + "}: " + item.value);
-                                    release_bank_item(data.Bank.Type.LBank, 0);
-                                    goto_next();
-                                    break;
-                                }
-                            case (int)Bytecode.Opcode.SPAWN_CORE:
-                                {
-                                    this.vm.core_manager.new_core_event += this.vm.core_manager.create_and_run;
-                                    this.vm.core_manager.new_core_event?.Invoke(this, new CoreCreateEventArgs(this.state.id,
-                                        new BytecodeInstance[]
-                                    {
-                                    new BytecodeInstance(-1),
-                                    new BytecodeInstance(-1),
-                                    new BytecodeInstance(-1),
-                                    new BytecodeInstance(-1),
-                                    new BytecodeInstance(-1),
-                                    new BytecodeInstance(-1),
-                                    new BytecodeInstance(-1),
-                                    new BytecodeInstance(-1),
-                                    new BytecodeInstance(-1),
-                                    }));
-
+                                    int id = expect_int(pop_exec());
+                                    WavyItem item = request_bank_item(data.Bank.Type.LBank, id);
+                                    release_bank_item(data.Bank.Type.LBank, id);
                                     goto_next();
                                     break;
                                 }
@@ -192,6 +170,13 @@ namespace wavynet.vm
                 }
             }
             return close();
+        }
+
+        // We expect a WavyItem to be an int
+        private int expect_int(WavyItem item)
+        {
+            ASSERT_ERR(!(item.type != typeof(int)), CoreErrorType.UNEXPECTED_TYPE, "Expected int, byt got: " + item.type);
+            return (int)item.value;
         }
 
         // Request a WavyItem from the BankManager

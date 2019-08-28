@@ -127,10 +127,12 @@ namespace wavynet.vm
 
         INVALID_BANK_ID,            // When an item is requested from the bank doesn't exist
         INVALID_MULTICORE_STATE,    // When a multicore operation fails due to an invalid multicore state
+        UNEXPECTED_TYPE,            // When the core expects a WavyItem to have a certian type
     }
 
     public enum VMErrorType
     {
+        INVALID_CORE_ID,            // For when accessing cores uses an invalid id
         INVALID_CORE_COUNT,         // Invalid number of cores created
     }
 }

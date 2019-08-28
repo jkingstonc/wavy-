@@ -12,10 +12,11 @@ namespace wavynet.vm
             SPAWN_CORE        = -2,
             TEST_REQUEST_ITEM = -1,
 
-            END = 0x0,    // End of a bytecode sequence
-            NOP = 0x1,    // No-Operations [we skip this]
+            END = 0x0,      // End of a bytecode sequence
+            NOP = 0x1,      // No-Operations [we skip this]
 
-            POP_EXEC = 0x2,   // Pop the top item from the execution stack
+            POP_EXEC,       // Pop the top item from the execution stack
+            PSH_EXEC,
 
             UN_NOT,         // Binary not
             UN_POSITIVE,    // Positive value of a numeric value
@@ -28,9 +29,13 @@ namespace wavynet.vm
             BIN_MOD,
             BIN_REM,
 
-            BANK_VAR,         // Define a variable to the bank
             ASSIGN_VAR,       // Assign a value to a variable in the bank
+            LD_LIT,           // Load a literal from the LBank to the stack
+            LD_VAR,           // Load a var from the MBank to the stack
+            
+            NEW,              // Create a new WavyObject instance and push to the stack
 
+            BANK_VAR,         // Define a variable to the bank
             BANK_CLASS,       // Define a class [add a class definition to the MBank]
             BANK_FUNCTION,    // Define a function [add a function definition to the MBank]
         }
