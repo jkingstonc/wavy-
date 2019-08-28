@@ -56,7 +56,7 @@ namespace wavynet.vm
                     new BytecodeInstance(-1),
                     new BytecodeInstance(-1),
                     new BytecodeInstance(-1),
-                    new BytecodeInstance(-2),
+                    new BytecodeInstance(-1),
                     new BytecodeInstance(-1),
                     new BytecodeInstance(-1),
                     new BytecodeInstance(-1),

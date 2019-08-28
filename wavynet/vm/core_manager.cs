@@ -93,6 +93,8 @@ namespace wavynet.vm
                 handles[counter] = pair.Value.handle;
                 counter++;
             }
+            // Check we actually have a core to wait for
+            vm.ASSERT_ERR(!(counter > 0), VMErrorType.INVALID_CORE_COUNT, "Cannot wait for 0 thread handles!");
             WaitHandle.WaitAll(handles);
         }
 
