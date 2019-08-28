@@ -19,11 +19,16 @@ namespace wavynet.vm
         public static bool MULTI_CORE_BANK_CACHING = true;
 
         // FOR DEBUGGING
-        public static bool INSTR_DEBUG = false;
-        public static bool TRACE_DEBUG = false;
+        public static bool INSTR_DEBUG = true;
+        public static bool TRACE_DEBUG = true;
         
 
         public VM()
+        {
+            run();
+        }
+
+        private void run()
         {
             try
             {
@@ -43,13 +48,11 @@ namespace wavynet.vm
                 new BytecodeInstance(-1),
                 new BytecodeInstance(-1),
                 };
-
-
                 this.core_manager = new CoreManager(this);
                 this.core_manager.start_core(core_manager.setup_core(core_manager.add_core(), sequence));
                 this.core_manager.start_core(core_manager.setup_core(core_manager.add_core(), sequence));
-            }                
-            catch (CoreErrException)
+            }
+            catch (VMErrException)
             {
                 this.core_manager.abort_all();
                 this.state.err_handler.say_latest();
@@ -69,7 +72,7 @@ namespace wavynet.vm
             // Register the error with the handler
             this.state.err_handler.register_err(new VMError(this.state, type, msg));
             this.state.had_err = true;
-            throw new CoreErrException();
+            throw new VMErrException();
         }
     }
 

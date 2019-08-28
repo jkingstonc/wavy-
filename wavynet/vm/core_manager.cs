@@ -4,7 +4,6 @@
  */
 
 using System.Collections.Generic;
-using System.Threading;
 
 namespace wavynet.vm
 {
@@ -37,11 +36,12 @@ namespace wavynet.vm
         {
             vm.ASSERT_ERR(!VM.MULTI_CORE && this.next_id > 0, VMErrorType.INVALID_CORE_COUNT, "Cannot have multiple cores in single core mode!");
             int id = gen_id();
-            this.core_pool.Add(id, new Core(this.vm, this, id));
+            this.core_pool.Add(id, new Core(this.vm, id));
             this.next_id++;
             return id;
         }
 
+        // Setup the core, after it has been registered to the pool
         public int setup_core(int id, BytecodeInstance[] sequence)
         {
             this.core_pool[id].setup(sequence);
@@ -52,9 +52,11 @@ namespace wavynet.vm
         public int start_core(int id)
         {
             this.core_pool[id].thread.Start();
+            this.core_pool[id].thread.Join();
             return id;
         }
 
+        // Close the core running
         public void close_core(int id)
         {
             this.core_pool[id].close();

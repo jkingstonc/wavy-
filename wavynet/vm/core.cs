@@ -15,7 +15,6 @@ namespace wavynet.vm
     public class Core
     {
         private VM vm;
-        private CoreManager core_manager;
         public Thread thread;
         // Holds information about the current state of this core
         public CoreState state;
@@ -33,10 +32,9 @@ namespace wavynet.vm
         // The max Program Counter, this determines program length
         public const int MAX_PC = 2048;
 
-        public Core(VM vm, CoreManager core_manager, int id)
+        public Core(VM vm, int id)
         {
             this.vm = vm;
-            this.core_manager = core_manager;
             this.state = CoreState.setup(id);
             this.pc = 0;
             this.traceback = new TraceBack();
@@ -72,7 +70,6 @@ namespace wavynet.vm
             this.state.currently_interpreting = false;
             // Change the state of the multi_core_state
             this.state.multi_core_state = MultiCoreState.DONE;
-            this.thread.Abort();
             return this.state;
         }
 
