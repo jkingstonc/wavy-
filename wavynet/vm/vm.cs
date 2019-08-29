@@ -48,11 +48,10 @@ namespace wavynet.vm
             {
                 this.state = VMState.setup();
                 this.bank_manager = new BankManager();
-                this.bank_manager.setup_l_test();
 
                 int count = 2;
-                Int32[] sequence = new Int32[count*5];
-                for(var i =0; i < count; i+=5)
+                Int32[] sequence = new Int32[count*6];
+                for(var i =0; i < count; i+=6)
                 {
                     sequence[i] = (Int32)Opcode.LD_LIT; sequence[i + 1] = (Int32)123;
                     sequence[i + 2] = (Int32)Opcode.IF_NZERO; sequence[i + 3] = (Int32)3;

@@ -9,13 +9,6 @@ namespace wavynet.vm.data
     // BankManager controls muli-core access to Bank data
     public class BankManager
     {
-        public void setup_l_test()
-        {
-            this.l_bank.add_test();
-            if (VM.MULTI_CORE)
-                this.l_lock.Add(123, new ItemLock());
-        }
-
         // The data banks this vm uses
         public Bank m_bank, l_bank;
         // The item locks that this vm uses

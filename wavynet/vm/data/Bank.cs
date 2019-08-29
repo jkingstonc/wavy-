@@ -14,11 +14,6 @@ namespace wavynet.vm.data
         private Dictionary<int, WavyItem> bank_dict;
         private Type type;
 
-        public void add_test()
-        {
-            this.bank_dict.Add(123, new WavyItem(456, typeof(int)));
-        }
-
         public Bank(Type type)
         {
             this.bank_dict = new Dictionary<int, WavyItem>();
