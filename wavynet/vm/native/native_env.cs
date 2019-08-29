@@ -12,10 +12,12 @@ namespace wavynet.vm.native
     class NativeEnv
     {
         private VM vm;
+        private Core core;
 
-        public NativeEnv(VM vm)
+        public NativeEnv(VM vm, Core core)
         {
             this.vm = vm;
+            this.core = core;
         }
 
         // Close the virtual machine that the native code references

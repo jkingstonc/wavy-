@@ -40,7 +40,7 @@ namespace wavynet.vm
         public Core(VM vm, int id)
         {
             this.vm = vm;
-            this.native_interface = new NativeInterface(this.vm);
+            this.native_interface = new NativeInterface(this.vm, this);
             this.state = CoreState.setup(id);
             this.pc = 0;
             this.traceback = new TraceBack();
@@ -64,6 +64,7 @@ namespace wavynet.vm
         // Run the core & start executing code
         public void run()
         {
+            Console.WriteLine(this.native_interface.call_native_func(@"C:\Users\44778\OneDrive - Lancaster University\programming\c#\DLLTest\bin\Debug\netstandard2.0\DLLTest.dll", "add", new object[] { 1, 2 }));
             this.thread.Start();
             if (VM.CORE_DEBUG)
             {

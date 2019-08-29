@@ -15,20 +15,22 @@ namespace wavynet.vm.native
     class NativeInterface
     {
         private VM vm;
+        private Core core;
         public NativeEnv env;
 
         // Store assemblies
         private Dictionary<string, Assembly> assemblies;
 
-        public NativeInterface(VM vm)
+        public NativeInterface(VM vm, Core core)
         {
             this.vm = vm;
-            this.env = new NativeEnv(this.vm);
+            this.core = core;
+            this.env = new NativeEnv(this.vm, this.core);
             this.assemblies = new Dictionary<string, Assembly>();
         }
 
         // Call a native function, and pass in the NativeEnviroment in use
-        public void call_native_func(string dll_path, string func, object[] args)
+        public object call_native_func(string dll_path, string func, object[] args)
         {
             // If we dont have the dll assembly, bind it
             if(!this.assemblies.ContainsKey(dll_path))
@@ -38,8 +40,9 @@ namespace wavynet.vm.native
             foreach (Type type in this.assemblies[dll_path].GetExportedTypes())
             {
                 var c = Activator.CreateInstance(type);
-                Console.WriteLine(type.InvokeMember(func, BindingFlags.InvokeMethod, null, c, args));
+                return type.InvokeMember(func, BindingFlags.InvokeMethod, null, c, args);
             }
+            return null;
         }
 
         // Bind the DLL for the native code that we want to use
