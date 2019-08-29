@@ -25,7 +25,7 @@ namespace wavynet.vm
         // Store the operations the core has carried out
         public TraceBack traceback;
         // The bytecode that the core is executing
-        public BytecodeInstance[] bytecode;
+        public Int32[] bytecode;
         // The function stack that this core is using
         public FuncStack func_stack;
         // The execution stack that this core is using
@@ -33,6 +33,8 @@ namespace wavynet.vm
 
         // The max Program Counter, this determines program length
         public const int MAX_PC = 65536; // 2^16
+
+        private System.Diagnostics.Stopwatch watch;
 
         public Core(VM vm, int id)
         {
@@ -45,7 +47,7 @@ namespace wavynet.vm
         }
 
         // Setup the core thread
-        public void setup(BytecodeInstance[] sequence)
+        public void setup(Int32[] sequence)
         {
             this.bytecode = sequence;
             this.state.opcode_count = sequence.Length;
@@ -61,6 +63,11 @@ namespace wavynet.vm
         public void run()
         {
             this.thread.Start();
+            if (VM.CORE_DEBUG)
+            {
+                this.watch = System.Diagnostics.Stopwatch.StartNew();
+                Console.WriteLine("Core {" + this.state.id + "} starting...");
+            }
         }
 
         // When we want the core to suspend execution
@@ -81,6 +88,12 @@ namespace wavynet.vm
         // Called when we want to close this core thread
         public CoreState close()
         {
+            if (VM.CORE_DEBUG)
+            {
+                // the code that you want to measure comes here
+                this.watch.Stop();
+                Console.WriteLine("Core {" + this.state.id + "} closing... took {"+ this.watch.Elapsed + "}");
+            }
             // Return an END state
             this.state.currently_interpreting = false;
             // Change the state of the multi_core_state
@@ -101,116 +114,112 @@ namespace wavynet.vm
                 // Only execute if the core has not been suspended
                 if (this.state.multi_core_state != MultiCoreState.SUSPENDED)
                 {
-                    BytecodeInstance bytecode = get_next();
-
-                    int op = get_op(bytecode);
-                    int arg = -1;
-
-                    if (has_arg(bytecode))
-                        arg = get_arg(bytecode);
+                    Int32 op = get_next();
 
                     if (VM.INSTR_DEBUG)
-                    {
-                        if (has_arg(bytecode))
-                            Console.WriteLine("op: " + (Bytecode.Opcode)op + "arg: " + arg);
-                        else
-                            Console.WriteLine("op: " + op);
-                    }
+                        Console.WriteLine("op: " + op);
 
                     // Surround the execute phase in a try catch, this is so the vm can return safely to the error handling
                     // without breaking other vm components
                     try
                     {
-                        switch (op)
+                        switch ((Opcode)op)
                         {
-                            case (int)Bytecode.Opcode.END:
+                            case Opcode.END:
                                 {
                                     // Return an END state
                                     this.state.currently_interpreting = false;
                                     return this.state;
                                 }
-                            case (int)Bytecode.Opcode.NOP:
+                            case Opcode.NOP:
                                 {
                                     goto_next();
                                     break;
                                 }
-                            case (int)Bytecode.Opcode.POP_EXEC:
+                            case Opcode.POP_EXEC:
                                 {
                                     pop_exec();
                                     goto_next();
                                     break;
                                 }
-                            case (int)Bytecode.Opcode.LD_LIT:
+                            case Opcode.LD_LIT:
                                 {
-                                    push_exec(request_bank_item(data.Bank.Type.LBank, arg));
-                                    release_bank_item(data.Bank.Type.LBank, arg);
+                                    Int32 id = get_arg();
+                                    push_exec(request_bank_item(data.Bank.Type.LBank, id));
+                                    release_bank_item(data.Bank.Type.LBank, id);
                                     goto_next();
                                     break;
                                 }
-                            case (int)Bytecode.Opcode.LD_VAR:
+                            case Opcode.LD_VAR:
                                 {
-                                    int id = expect_int(pop_exec());
-                                    WavyItem item = request_bank_item(data.Bank.Type.MBank, id);
+                                    Int32 id = get_arg();
+                                    push_exec(request_bank_item(data.Bank.Type.MBank, id));
                                     release_bank_item(data.Bank.Type.MBank, id);
                                     goto_next();
                                     break;
                                 }
-                            case (int)Bytecode.Opcode.GOTO:
+                            case Opcode.GOTO:
                                 {
-                                    this.pc += arg;
+                                    this.pc += get_arg();
                                     break;
                                 }
-                            case (int)Bytecode.Opcode.IF_ZERO:
+                            case Opcode.IF_ZERO:
                                 {
+                                    Int32 arg = get_arg();
                                     if (expect_numeric(pop_exec()) == 0)
                                     {
                                         goto_next(); break;
                                     }
                                     this.pc += arg; break;
                                 }
-                            case (int)Bytecode.Opcode.IF_NZERO:
+                            case Opcode.IF_NZERO:
                                 {
+                                    Int32 arg = get_arg();
                                     if (expect_numeric(pop_exec()) != 0)
                                     {
                                         goto_next(); break;
                                     }
                                     this.pc += arg; break;
                                 }
-                            case (int)Bytecode.Opcode.IF_GRT:
+                            case Opcode.IF_GRT:
                                 {
+                                    Int32 arg = get_arg();
                                     if (expect_numeric(pop_exec()) > expect_numeric(pop_exec()))
                                     {
                                         goto_next(); break;
                                     }
                                     this.pc += arg; break;
                                 }
-                            case (int)Bytecode.Opcode.IF_GRTE:
+                            case Opcode.IF_GRTE:
                                 {
+                                    Int32 arg = get_arg();
                                     if (expect_numeric(pop_exec()) >= expect_numeric(pop_exec()))
                                     {
                                         goto_next(); break;
                                     }
                                     this.pc += arg; break;
                                 }
-                            case (int)Bytecode.Opcode.IF_LT:
+                            case Opcode.IF_LT:
                                 {
+                                    Int32 arg = get_arg();
                                     if (expect_numeric(pop_exec()) < expect_numeric(pop_exec()))
                                     {
                                         goto_next(); break;
                                     }
                                     this.pc += arg; break;
                                 }
-                            case (int)Bytecode.Opcode.IF_LTE:
+                            case Opcode.IF_LTE:
                                 {
+                                    Int32 arg = get_arg();
                                     if (expect_numeric(pop_exec()) <= expect_numeric(pop_exec()))
                                     {
                                         goto_next(); break;
                                     }
                                     this.pc += arg; break;
                                 }
-                            case (int)Bytecode.Opcode.PRINT_TEST:
+                            case Opcode.PRINT_TEST:
                                 {
-                                    Console.WriteLine("PRINT TEST!!");
+                                    Console.WriteLine("Core {"+this.state.id+"} PRINT TEST!!");
                                     goto_next();
                                     break;
                                 }
@@ -326,7 +335,7 @@ namespace wavynet.vm
         // Check if we have reached the end
         public bool end()
         {
-            return (this.state.multi_core_state == MultiCoreState.ABORTED) || (this.state.multi_core_state == MultiCoreState.DONE) || (pc >= state.opcode_count) || (bytecode[pc].op == (int)Bytecode.Opcode.END);
+            return (this.state.multi_core_state == MultiCoreState.ABORTED) || (this.state.multi_core_state == MultiCoreState.DONE) || (pc >= state.opcode_count) || (bytecode[pc] == (Int32)Opcode.END);
         }
 
         // Called once the current bytecode execution has been completed
@@ -336,26 +345,16 @@ namespace wavynet.vm
         }
 
         // Returns the next bytecode instance
-        public BytecodeInstance get_next()
+        public Int32 get_next()
         {
             return bytecode[pc];
         }
 
-        // Get the next opcode
-        public int get_op(BytecodeInstance bytecode)
-        {
-            return bytecode.op;
-        }
-
         // Get the next argument
-        public int get_arg(BytecodeInstance bytecode)
+        public Int32 get_arg()
         {
-            return bytecode.arg;
-        }
-
-        public bool has_arg(BytecodeInstance bytecode)
-        {
-            return bytecode.has_arg;
+            goto_next();
+            return get_next();
         }
 
         // Pop from the current execution stack in use

@@ -68,7 +68,7 @@ namespace wavynet.vm
         }
 
         // Setup the core, after it has been registered to the pool
-        public int setup_core(int id, BytecodeInstance[] sequence)
+        public int setup_core(int id, Int32[] sequence)
         {
             vm.ASSERT_ERR(!(this.core_pool.ContainsKey(id)), VMErrorType.INVALID_CORE_ID, "id: "+id);
             this.core_pool[id].setup(sequence);
@@ -114,9 +114,9 @@ namespace wavynet.vm
     public class CoreCreateEventArgs : EventArgs
     {
         public int creator_id { get; set; }
-        public BytecodeInstance[] bytecode { get; set; }
+        public Int32[] bytecode { get; set; }
 
-        public CoreCreateEventArgs(int creator_id, BytecodeInstance[] bytecode)
+        public CoreCreateEventArgs(int creator_id, Int32[] bytecode)
         {
             this.creator_id = creator_id;
             this.bytecode = bytecode;

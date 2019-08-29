@@ -3,6 +3,7 @@
  * 22/08/19
  */
 
+using System;
 using System.Threading;
 using wavynet.vm.data;
 
@@ -21,6 +22,7 @@ namespace wavynet.vm
         public static bool MULTI_CORE_BANK_CACHING = true;
 
         // FOR DEBUGGING
+        public static bool CORE_DEBUG = true;
         public static bool INSTR_DEBUG = false;
         public static bool TRACE_DEBUG = false;
         
@@ -48,11 +50,13 @@ namespace wavynet.vm
                 this.bank_manager = new BankManager();
                 this.bank_manager.setup_l_test();
 
-                int size = 10;
-                BytecodeInstance[] sequence = new BytecodeInstance[size];
-                for(var i =0;i< size; i++)
+                int count = 2;
+                Int32[] sequence = new Int32[count*5];
+                for(var i =0; i < count; i+=5)
                 {
-                    sequence[i]= new BytecodeInstance(-1);
+                    sequence[i] = (Int32)Opcode.LD_LIT; sequence[i + 1] = (Int32)123;
+                    sequence[i + 2] = (Int32)Opcode.IF_NZERO; sequence[i + 3] = (Int32)3;
+                    sequence[i + 4] = (Int32)Opcode.PRINT_TEST;
                 }
                 this.core_manager = new CoreManager(this);
                 // Create and run the main core
