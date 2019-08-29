@@ -4,9 +4,9 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using wavynet.vm.data.items;
+using wavynet.vm.native;
 
 namespace wavynet.vm
 {
@@ -17,6 +17,7 @@ namespace wavynet.vm
     public class Core
     {
         private VM vm;
+        private NativeInterface native_interface;
         public Thread thread;
         // Holds information about the current state of this core
         public CoreState state;
@@ -39,6 +40,7 @@ namespace wavynet.vm
         public Core(VM vm, int id)
         {
             this.vm = vm;
+            this.native_interface = new NativeInterface(this.vm);
             this.state = CoreState.setup(id);
             this.pc = 0;
             this.traceback = new TraceBack();

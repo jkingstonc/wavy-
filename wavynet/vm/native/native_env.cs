@@ -11,5 +11,17 @@ namespace wavynet.vm.native
      */
     class NativeEnv
     {
+        private VM vm;
+
+        public NativeEnv(VM vm)
+        {
+            this.vm = vm;
+        }
+
+        // Close the virtual machine that the native code references
+        public void close_vm()
+        {
+            this.vm.close();
+        }
     }
 }

@@ -37,7 +37,7 @@ namespace wavynet.vm
             this.thread.Start();
         }
 
-        private void close()
+        public void close()
         {
             System.Console.WriteLine("# closing vm #");
         }
