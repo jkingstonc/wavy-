@@ -13,7 +13,7 @@ namespace wavynet.vm.data
         {
             this.l_bank.add_test();
             if (VM.MULTI_CORE)
-                this.l_lock.Add(0, new ItemLock());
+                this.l_lock.Add(123, new ItemLock());
         }
 
         // The data banks this vm uses

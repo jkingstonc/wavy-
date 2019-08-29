@@ -4,7 +4,9 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Threading;
+using wavynet.vm.data.items;
 
 namespace wavynet.vm
 {
@@ -30,7 +32,7 @@ namespace wavynet.vm
         public ExecStack exec_stack;
 
         // The max Program Counter, this determines program length
-        public const int MAX_PC = 2048;
+        public const int MAX_PC = 65536; // 2^16
 
         public Core(VM vm, int id)
         {
@@ -66,6 +68,7 @@ namespace wavynet.vm
         {
             this.ASSERT_ERR(this.state.multi_core_state == MultiCoreState.SUSPENDED, CoreErrorType.INVALID_MULTICORE_STATE, "Cannot suspend core that has already been suspended!");
             this.state.multi_core_state = MultiCoreState.SUSPENDED;
+
         }
 
         // When we want to resume the core operation
@@ -139,9 +142,75 @@ namespace wavynet.vm
                                 }
                             case (int)Bytecode.Opcode.LD_LIT:
                                 {
+                                    push_exec(request_bank_item(data.Bank.Type.LBank, arg));
+                                    release_bank_item(data.Bank.Type.LBank, arg);
+                                    goto_next();
+                                    break;
+                                }
+                            case (int)Bytecode.Opcode.LD_VAR:
+                                {
                                     int id = expect_int(pop_exec());
-                                    WavyItem item = request_bank_item(data.Bank.Type.LBank, id);
-                                    release_bank_item(data.Bank.Type.LBank, id);
+                                    WavyItem item = request_bank_item(data.Bank.Type.MBank, id);
+                                    release_bank_item(data.Bank.Type.MBank, id);
+                                    goto_next();
+                                    break;
+                                }
+                            case (int)Bytecode.Opcode.GOTO:
+                                {
+                                    this.pc += arg;
+                                    break;
+                                }
+                            case (int)Bytecode.Opcode.IF_ZERO:
+                                {
+                                    if (expect_numeric(pop_exec()) == 0)
+                                    {
+                                        goto_next(); break;
+                                    }
+                                    this.pc += arg; break;
+                                }
+                            case (int)Bytecode.Opcode.IF_NZERO:
+                                {
+                                    if (expect_numeric(pop_exec()) != 0)
+                                    {
+                                        goto_next(); break;
+                                    }
+                                    this.pc += arg; break;
+                                }
+                            case (int)Bytecode.Opcode.IF_GRT:
+                                {
+                                    if (expect_numeric(pop_exec()) > expect_numeric(pop_exec()))
+                                    {
+                                        goto_next(); break;
+                                    }
+                                    this.pc += arg; break;
+                                }
+                            case (int)Bytecode.Opcode.IF_GRTE:
+                                {
+                                    if (expect_numeric(pop_exec()) >= expect_numeric(pop_exec()))
+                                    {
+                                        goto_next(); break;
+                                    }
+                                    this.pc += arg; break;
+                                }
+                            case (int)Bytecode.Opcode.IF_LT:
+                                {
+                                    if (expect_numeric(pop_exec()) < expect_numeric(pop_exec()))
+                                    {
+                                        goto_next(); break;
+                                    }
+                                    this.pc += arg; break;
+                                }
+                            case (int)Bytecode.Opcode.IF_LTE:
+                                {
+                                    if (expect_numeric(pop_exec()) <= expect_numeric(pop_exec()))
+                                    {
+                                        goto_next(); break;
+                                    }
+                                    this.pc += arg; break;
+                                }
+                            case (int)Bytecode.Opcode.PRINT_TEST:
+                                {
+                                    Console.WriteLine("PRINT TEST!!");
                                     goto_next();
                                     break;
                                 }
@@ -168,11 +237,32 @@ namespace wavynet.vm
             return close();
         }
 
+        // We expect a WavyItem to be a numeric
+        private dynamic expect_numeric(WavyItem item)
+        {
+            ASSERT_ERR(item.type != typeof(int) && item.type != typeof(double), CoreErrorType.UNEXPECTED_TYPE, "Expected numeric, but got: " + item.type);
+            return item.value;
+        }
+
         // We expect a WavyItem to be an int
         private int expect_int(WavyItem item)
         {
-            ASSERT_ERR(!(item.type != typeof(int)), CoreErrorType.UNEXPECTED_TYPE, "Expected int, byt got: " + item.type);
+            ASSERT_ERR(item.type != typeof(int), CoreErrorType.UNEXPECTED_TYPE, "Expected int, but got: " + item.type);
             return (int)item.value;
+        }
+
+        // We expect a WavyItem to be a WavyFunction
+        private WavyItem expect_wfunc(WavyItem item)
+        {
+            ASSERT_ERR(!(item.type != typeof(WavyFunction)), CoreErrorType.UNEXPECTED_TYPE, "Expected WavyFunction, but got: " + item.type);
+            return item;
+        }
+
+        // We expect a WavyItem to be a WavyObject
+        private WavyItem expect_wobject(WavyItem item)
+        {
+            ASSERT_ERR(!(item.type != typeof(WavyObject)), CoreErrorType.UNEXPECTED_TYPE, "Expected WavyObject, but got: " + item.type);
+            return item;
         }
 
         // Request a WavyItem from the BankManager
@@ -191,7 +281,7 @@ namespace wavynet.vm
         // Release a WavyItem from the BankManager
         private void release_bank_item(data.Bank.Type type, int id)
         {
-            this.vm.bank_manager.release_item(this, type, 0);
+            this.vm.bank_manager.release_item(this, type, id);
         }
 
         // Used when we may need to register an error (for convenience like a macro)
