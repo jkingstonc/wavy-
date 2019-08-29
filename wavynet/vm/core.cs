@@ -217,12 +217,6 @@ namespace wavynet.vm
                                     }
                                     this.pc += arg; break;
                                 }
-                            case Opcode.PRINT_TEST:
-                                {
-                                    Console.WriteLine("Core {"+this.state.id+"} PRINT TEST!!");
-                                    goto_next();
-                                    break;
-                                }
                             default:
                                 {
                                     // We have an invalid opcode

@@ -53,9 +53,7 @@ namespace wavynet.vm
                 Int32[] sequence = new Int32[count*6];
                 for(var i =0; i < count; i+=6)
                 {
-                    sequence[i] = (Int32)Opcode.LD_LIT; sequence[i + 1] = (Int32)123;
-                    sequence[i + 2] = (Int32)Opcode.IF_NZERO; sequence[i + 3] = (Int32)3;
-                    sequence[i + 4] = (Int32)Opcode.PRINT_TEST;
+                    sequence[i] = (Int32)Opcode.END;
                 }
                 this.core_manager = new CoreManager(this);
                 // Create and run the main core

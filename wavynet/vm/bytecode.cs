@@ -7,10 +7,6 @@ namespace wavynet.vm
 {
     public enum Opcode
     {
-        PRINT_TEST = -3,
-        SPAWN_CORE = -2,
-        TEST_REQUEST_ITEM = -1,
-
         END = 0x0,      // End of a bytecode sequence
         NOP = 0x1,      // No-Operations [we skip this]
 
@@ -29,6 +25,7 @@ namespace wavynet.vm
 
         LD_LIT,           // Load a literal from the LBank to the stack
         LD_VAR,           // Load a var from the MBank to the stack
+        LD_LOC,           // Load a local variable to the stack
 
         BANK_VAR,         // Define a variable to the bank
         BANK_CLASS,       // Define a class [add a class definition to the MBank]
