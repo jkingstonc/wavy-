@@ -4,6 +4,8 @@
  */
 
 using System;
+using System.Collections.Generic;
+using System.Reflection;
 using System.Threading;
 using wavynet.vm.data;
 
@@ -15,6 +17,7 @@ namespace wavynet.vm
         public VMState state;
         public CoreManager core_manager;
         public BankManager bank_manager;
+        public LinkProfile link_profile;
 
         // Should the vm emulate multi threading using multiple cores
         public static bool MULTI_CORE = true;
@@ -32,6 +35,14 @@ namespace wavynet.vm
             this.thread = new Thread(() => run());
         }
 
+        public void setup()
+        {
+            this.state = VMState.setup();
+            this.bank_manager = new BankManager();
+            this.link_profile = new LinkProfile();
+            this.link_profile.bind_all_dll(new string[] { @"C:\Users\44778\OneDrive - Lancaster University\programming\c#\DLLTest\bin\Debug\netstandard2.0\DLLTest.dll" });
+        }
+
         public void start()
         {
             this.thread.Start();
@@ -39,25 +50,24 @@ namespace wavynet.vm
 
         public void close()
         {
-            System.Console.WriteLine("# closing vm #");
+            Console.WriteLine("# closing vm #");
         }
 
         private void run()
         {
             try
             {
-                this.state = VMState.setup();
-                this.bank_manager = new BankManager();
-
                 int count = 2;
                 Int32[] sequence = new Int32[count*6];
                 for(var i =0; i < count; i+=6)
                 {
                     sequence[i] = (Int32)Opcode.END;
                 }
+
                 this.core_manager = new CoreManager(this);
                 // Create and run the main core
                 this.core_manager.new_core_event += this.core_manager.create_and_run;
+                this.core_manager.new_core_event?.Invoke(this, new CoreCreateEventArgs(-1, sequence));
                 this.core_manager.new_core_event?.Invoke(this, new CoreCreateEventArgs(-1, sequence));
                 // Join all core threads to this (wait for all cores to finish)
                 this.core_manager.join_all_cores();
