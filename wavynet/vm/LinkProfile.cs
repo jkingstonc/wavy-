@@ -1,7 +1,7 @@
 ﻿/*
- * James Clarke
- * 29/08/19
- */
+* James Clarke
+* 29/08/19
+*/
 
 using System.Collections.Generic;
 using System.Reflection;

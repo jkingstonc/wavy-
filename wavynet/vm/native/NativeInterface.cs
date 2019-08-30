@@ -5,6 +5,7 @@
 
 using System;
 using System.Reflection;
+using wavynet.file;
 
 namespace wavynet.vm.native
 {
@@ -15,14 +16,14 @@ namespace wavynet.vm.native
     {
         private VM vm;
         private Core core;
-        private LinkProfile link_profile;
+        private LinkManager link_manager;
         public NativeEnv env;
 
         public NativeInterface(VM vm, Core core)
         {
             this.vm = vm;
             this.core = core;
-            this.link_profile = vm.link_profile;
+            this.link_manager = vm.link_manager;
             this.env = new NativeEnv(this.vm, this.core);
         }
 
@@ -31,7 +32,7 @@ namespace wavynet.vm.native
         {
             // Loop over each class definition (Type) and attempt to call the func
             // Note, we should explicitly check for the correct type
-            foreach (Type type in this.link_profile.assemblies[dll_path].GetExportedTypes())
+            foreach (Type type in this.link_manager.assemblies[dll_path].GetExportedTypes())
             {
                 var c = Activator.CreateInstance(type);
                 return type.InvokeMember(func, BindingFlags.InvokeMethod, null, c, args);

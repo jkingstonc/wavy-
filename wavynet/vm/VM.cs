@@ -1,12 +1,11 @@
 ﻿/*
- * James Clarke
- * 22/08/19
- */
+* James Clarke
+* 22/08/19
+*/
 
 using System;
-using System.Collections.Generic;
-using System.Reflection;
 using System.Threading;
+using wavynet.profile;
 using wavynet.vm.data;
 
 namespace wavynet.vm
@@ -17,7 +16,9 @@ namespace wavynet.vm
         public VMState state;
         public CoreManager core_manager;
         public BankManager bank_manager;
-        public LinkProfile link_profile;
+        public LinkManager link_manager;
+
+        public WCProfile wc_profile;
 
         // Should the vm emulate multi threading using multiple cores
         public static bool MULTI_CORE = true;
@@ -28,19 +29,19 @@ namespace wavynet.vm
         public static bool CORE_DEBUG = true;
         public static bool INSTR_DEBUG = false;
         public static bool TRACE_DEBUG = false;
-        
+
 
         public VM()
         {
             this.thread = new Thread(() => run());
         }
 
-        public void setup()
+        public void setup(WCProfile wc_profile)
         {
             this.state = VMState.setup();
             this.bank_manager = new BankManager();
-            this.link_profile = new LinkProfile();
-            this.link_profile.bind_all_dll(new string[] { @"C:\Users\44778\OneDrive - Lancaster University\programming\c#\DLLTest\bin\Debug\netstandard2.0\DLLTest.dll" });
+            this.link_manager = new LinkManager();
+            this.link_manager.bind_all_dll(new string[] { @"F:\OneDrive - Lancaster University\programming\c#\DLLTest\bin\Debug\netstandard2.0\DLLTest.dll" });
         }
 
         public void start()
@@ -58,8 +59,8 @@ namespace wavynet.vm
             try
             {
                 int count = 2;
-                Int32[] sequence = new Int32[count*6];
-                for(var i =0; i < count; i+=6)
+                Int32[] sequence = new Int32[count * 6];
+                for (var i = 0; i < count; i += 6)
                 {
                     sequence[i] = (Int32)Opcode.END;
                 }
