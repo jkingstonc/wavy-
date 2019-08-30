@@ -162,8 +162,13 @@ namespace wavynet.vm
                                 }
                             case Opcode.INVOKE_FUNC:
                                 {
+                                    /* WARNING
+                                    * This should not work on multiple threads, becuase we are only releasing the function from the bank
+                                    * when we are done with the function call. We should handle bank requests smarter than this!
+                                     */
+                                    Int32 id = get_arg();
                                     // Currently, this does not work with methods, only functions
-                                    WavyFunction func = (WavyFunction)request_bank_item(data.Bank.Type.MBank, get_arg());
+                                    WavyFunction func = (WavyFunction)request_bank_item(data.Bank.Type.MBank, id);
                                     // Check for the number of required arguments, and get them from the stack
                                     WavyItem[] args = new WavyItem[func.args()];
                                     for (int i = 0; i < func.args(); i++)
@@ -176,6 +181,7 @@ namespace wavynet.vm
                                     {
                                         func_call(func, args);
                                     }
+                                    release_bank_item(data.Bank.Type.MBank, id);
                                     goto_next();
                                     break;
                                 }
