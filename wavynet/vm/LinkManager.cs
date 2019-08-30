@@ -5,7 +5,6 @@
 
 using System.Collections.Generic;
 using System.Reflection;
-using wavynet.profile;
 
 namespace wavynet.vm
 {
@@ -14,27 +13,33 @@ namespace wavynet.vm
      */
     public class LinkManager
     {
-        public LinkProfile link_profile;
         // Store assemblies
         public Dictionary<string, Assembly> assemblies;
 
-        public LinkManager(LinkProfile link_profile)
+        public LinkManager()
         {
-            this.link_profile = link_profile;
             this.assemblies = new Dictionary<string, Assembly>();
         }
 
         // Bind all dlls
         public void bind_all_dll()
         {
-            foreach (string path in this.link_profile.dll_paths)
-                bind_dll(path);
+            foreach (KeyValuePair<string, string> dll in this.get_all_dlls())
+                bind_dll(dll.Key, dll.Value);
+        }
+
+        // This gets every dll file within the "native/dll/" installation folder
+        private Dictionary<string, string> get_all_dlls()
+        {
+            return new Dictionary<string, string>() {
+                { "TestFile", @"F:\OneDrive - Lancaster University\programming\c#\DLLTest\bin\Debug\netstandard2.0\DLLTest.dll" },
+            };
         }
 
         // Bind the DLL for the native code that we want to use
-        private void bind_dll(string dll_path)
+        private void bind_dll(string name, string path)
         {
-            this.assemblies.Add(dll_path, Assembly.LoadFile(dll_path));
+            this.assemblies.Add(name, Assembly.LoadFile(path));
         }
     }
 }

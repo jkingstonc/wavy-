@@ -64,7 +64,7 @@ namespace wavynet.vm
         // Run the core & start executing code
         public void run()
         {
-            Console.WriteLine(this.native_interface.call_native_func(@"F:\OneDrive - Lancaster University\programming\c#\DLLTest\bin\Debug\netstandard2.0\DLLTest.dll", "add", new object[] { 1, 2 }));
+            Console.WriteLine(this.native_interface.call_native_func(this.vm.state.current_file, "add", new object[] { 1, 2 }));
             this.thread.Start();
             if (VM.CORE_DEBUG)
             {

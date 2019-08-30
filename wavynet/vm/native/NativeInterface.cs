@@ -28,11 +28,11 @@ namespace wavynet.vm.native
         }
 
         // Call a native function, and pass in the NativeEnviroment in use
-        public object call_native_func(string dll_path, string func, object[] args)
+        public object call_native_func(string current_file, string func, object[] args)
         {
             // Loop over each class definition (Type) and attempt to call the func
             // Note, we should explicitly check for the correct type
-            foreach (Type type in this.link_manager.assemblies[dll_path].GetExportedTypes())
+            foreach (Type type in this.link_manager.assemblies[current_file].GetExportedTypes())
             {
                 var c = Activator.CreateInstance(type);
                 return type.InvokeMember(func, BindingFlags.InvokeMethod, null, c, args);

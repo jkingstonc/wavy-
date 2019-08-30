@@ -34,11 +34,14 @@ namespace wavynet.vm
             this.thread = new Thread(() => run());
         }
 
-        public void setup(WCProfile wc_profile)
+        // On setup, the vm initialises the VM state
+        // It then initialises the BankManager, which in turn registers all the file bank data to the Bank's in memory
+        // It then creates a LinkManager, which in turn generates all Assemblies for required dll files
+        public void setup(string current_file, WCProfile wc_profile)
         {
-            this.state = VMState.setup();
+            this.state = VMState.setup(current_file);
             this.bank_manager = new BankManager(wc_profile.bank_profile);
-            this.link_manager = new LinkManager(wc_profile.link_profile);
+            this.link_manager = new LinkManager();
             this.bank_manager.bind_bank_data();
             this.link_manager.bind_all_dll();
         }
@@ -101,19 +104,21 @@ namespace wavynet.vm
     // Represents a state of the vm at a particular time
     public class VMState
     {
+        public string current_file;
         public ErrorHandler err_handler;
         public bool had_err;
 
-        public VMState(ErrorHandler err_handler)
+        public VMState(string current_file, ErrorHandler err_handler)
         {
+            this.current_file = current_file;
             this.err_handler = err_handler;
             this.had_err = false;
         }
 
         // Create a fresh VMState instance
-        public static VMState setup()
+        public static VMState setup(string current_file)
         {
-            return new VMState(new VMErrorHandler());
+            return new VMState(current_file, new VMErrorHandler());
         }
     }
 }
