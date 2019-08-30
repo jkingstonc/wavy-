@@ -12,7 +12,7 @@ namespace wavynet.vm
     /* 
      * Handles threading of cores
     */
-    public class CoreManager
+    public class CoreManager : VMComponent
     {
         // This is the event which handles adding a new core to the core_pool
         public EventHandler new_core_event;
@@ -26,6 +26,7 @@ namespace wavynet.vm
 
         public CoreManager(VM vm)
         {
+            this.component_id = "CoreManager";
             this.vm = vm;
             this.core_pool = new Dictionary<int, Core>();
         }
@@ -55,7 +56,7 @@ namespace wavynet.vm
             int id = add_core();
             setup_core(id, ((CoreCreateEventArgs)args).bytecode);
             start_core(id);
-            Wavy.logger.log("creating & starting new core '" + id + "'");
+            Wavy.logger.log("[" + this.component_id + "] " + "creating & starting new core '" + id + "'");
         }
 
         // Add a new core to the pool
@@ -87,7 +88,7 @@ namespace wavynet.vm
         // Close the core running
         public void close_core(int id)
         {
-            Wavy.logger.log("closing core '" + id + "'");
+            Wavy.logger.log("["+this.component_id+"] "+"closing core '" + id + "'");
             this.core_pool.Remove(id);
             // If we have done with all cores, trigger the close vm event
             if (this.core_pool.Count == 0)
@@ -98,7 +99,7 @@ namespace wavynet.vm
         // We wait until the core_pool is empty and then we can close the vm
         public void join_all_cores()
         {
-            Wavy.logger.log("joining thread to all cores");
+            Wavy.logger.log("[" + this.component_id + "] " + "joining thread to all cores");
             // This thread will block here until the close_vm_event is sent.
             end_vm_event.WaitOne();
             end_vm_event.Reset();

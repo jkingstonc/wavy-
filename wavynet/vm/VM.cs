@@ -10,10 +10,10 @@ using wavynet.vm.data;
 
 namespace wavynet.vm
 {
-    public class VM
+    public class VM : VMComponent
     {
         public Thread thread;
-        public VMState state;
+        public static VMState state;
         public CoreManager core_manager;
         public BankManager bank_manager;
         public LinkManager link_manager;
@@ -25,6 +25,7 @@ namespace wavynet.vm
 
         public VM()
         {
+            this.component_id = "VM";
             this.thread = new Thread(() => run());
         }
 
@@ -33,36 +34,29 @@ namespace wavynet.vm
         // It then creates a LinkManager, which in turn generates all Assemblies for required dll files
         public void setup(string current_file, WCProfile wc_profile)
         {
-            Wavy.logger.log("setting up VM for file '"+current_file+"'");
-            this.state = VMState.setup(current_file);
+            Wavy.logger.log("[" + this.component_id + "] " + "setting up VM for file '" + current_file+"'");
+            VM.state = VMState.setup(current_file);
             this.bank_manager = new BankManager(wc_profile.bank_profile);
             this.link_manager = new LinkManager();
-            this.bank_manager.bind_bank_data();
-            this.link_manager.bind_all_dll();
+            this.bank_manager.setup();
+            this.link_manager.setup();
         }
 
-        public void start()
+        public override void start()
         {
-            Wavy.logger.log("starting VM");
+            base.start();
             this.thread.Start();
         }
 
-        public void close()
+        public override void run()
         {
-            Wavy.logger.log("closing vm");
-        }
-
-        private void run()
-        {
-            Wavy.logger.log("running vm");
+            base.run();
             try
             {
-                int count = 2;
-                Int32[] sequence = new Int32[count * 6];
-                for (var i = 0; i < count; i += 6)
-                {
-                    sequence[i] = (Int32)Opcode.END;
-                }
+                Int32[] sequence = new Int32[] 
+                { 
+                    (Int32)Opcode.END,
+                };
 
                 this.core_manager = new CoreManager(this);
                 // Create and run the main core
@@ -76,26 +70,16 @@ namespace wavynet.vm
             {
                 Wavy.logger.log("caught vm error!");
                 this.core_manager.abort_all();
-                this.state.err_handler.say_latest();
+                VM.state.err_handler.say_latest();
             }
             close();
         }
 
-        // Used when we may need to register an error (for convenience like a macro)
-        public void ASSERT_ERR(bool condition, VMErrorType type, string msg = null)
+        public override void close()
         {
-            if (condition)
-                push_err(type, msg);
-        }
-
-        // Push an error to the cores' error handler
-        public void push_err(VMErrorType type, string msg = null)
-        {
-            VMError err = new VMError(this.state, type, msg);
-            // Register the error with the handler
-            this.state.err_handler.register_err(err);
-            this.state.had_err = true;
-            throw new VMErrException(err);
+            base.close();
+            this.bank_manager.close();
+            this.link_manager.close();
         }
     }
 

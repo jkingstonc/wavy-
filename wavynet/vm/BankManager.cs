@@ -8,7 +8,7 @@ using wavynet.profile;
 namespace wavynet.vm.data
 {
     // BankManager controls muli-core access to Bank data
-    public class BankManager
+    public class BankManager : VMComponent
     {
         public BankProfile bank_profile;
         // The data banks this vm uses
@@ -18,22 +18,31 @@ namespace wavynet.vm.data
 
         public BankManager(BankProfile bank_profile)
         {
+            this.component_id = "BankManager";
             this.bank_profile = bank_profile;
+        }
+
+        public override void setup()
+        {
+            base.setup();
             this.m_bank = new Bank(Bank.Type.MBank);
             this.l_bank = new Bank(Bank.Type.LBank);
 
-            if(VM.MULTI_CORE)
+            if (VM.MULTI_CORE)
             {
                 m_lock = new Dictionary<int, ItemLock>();
                 l_lock = new Dictionary<int, ItemLock>();
             }
+
+            bind_bank_data();
         }
 
         // Bind all the data in the bank_profile to the banks
         public void bind_bank_data()
         {
+            Wavy.logger.log("[" + this.component_id + "] " + "binding all bank data from profile");
             // Loop over each value in the bank profile (M & L) & bind the data to our banks
-            for(int i = 0; i < this.bank_profile.l_bank_data.Length; i++)
+            for (int i = 0; i < this.bank_profile.l_bank_data.Length; i++)
             {
                 this.l_bank.add(i, this.bank_profile.l_bank_data[i]);
                 if (VM.MULTI_CORE)

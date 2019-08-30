@@ -344,7 +344,7 @@ namespace wavynet.vm
             // Check if the function is native
             if(func.is_native)
             {
-                this.native_interface.call_native_func(this.vm.state.current_file, func.name, args);
+                this.native_interface.call_native_func(VM.state.current_file, func.name, args);
                 return null;
             }
             else
