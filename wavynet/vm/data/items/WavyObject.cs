@@ -4,7 +4,7 @@
     {
         public static WavyItem make_obj()
         {
-            return new WavyItem(new WavyObject(), typeof(WavyObject));
+            return new WavyItem(new WavyObject(), ItemType.OBJECT);
         }
     }
 }

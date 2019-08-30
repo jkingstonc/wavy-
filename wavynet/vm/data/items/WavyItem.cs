@@ -10,12 +10,23 @@ namespace wavynet.vm
     public class WavyItem
     {
         public object value;
-        public Type type;
+        public ItemType type;
 
-        public WavyItem(object value, Type type)
+        public WavyItem(object value, ItemType type)
         {
             this.value = value;
             this.type = type;
         }
+    }
+
+    public enum ItemType
+    {
+        BOOL,
+        INT,
+        DOUBLE,
+        STRING,
+        FUNC,
+        OBJECT,
+        CLASS,
     }
 }

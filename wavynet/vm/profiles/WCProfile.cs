@@ -30,7 +30,7 @@ namespace wavynet.profile
             LinkProfile l_profile = new LinkProfile();
             l_profile.test_add(new string[] { @"F:\OneDrive - Lancaster University\programming\c#\DLLTest\bin\Debug\netstandard2.0\DLLTest.dll" });
             BankProfile b_profile = new BankProfile();
-            b_profile.test_add(new WavyItem[] { new WavyItem("lol", typeof(string)), new WavyItem(5, typeof(int))});
+            b_profile.test_add(new WavyItem[] { new WavyItem("lol", ItemType.STRING), new WavyItem(5, ItemType.INT)});
             int count = 2;
             Int32[] sequence = new Int32[count * 6];
             for (var i = 0; i < count; i += 6)

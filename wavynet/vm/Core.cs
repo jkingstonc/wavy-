@@ -246,28 +246,28 @@ namespace wavynet.vm
         // We expect a WavyItem to be a numeric
         private dynamic expect_numeric(WavyItem item)
         {
-            ASSERT_ERR(item.type != typeof(int) && item.type != typeof(double), CoreErrorType.UNEXPECTED_TYPE, "Expected numeric, but got: " + item.type);
+            ASSERT_ERR(item.type != ItemType.INT && item.type != ItemType.DOUBLE, CoreErrorType.UNEXPECTED_TYPE, "Expected numeric, but got: " + item.type);
             return item.value;
         }
 
         // We expect a WavyItem to be an int
         private int expect_int(WavyItem item)
         {
-            ASSERT_ERR(item.type != typeof(int), CoreErrorType.UNEXPECTED_TYPE, "Expected int, but got: " + item.type);
+            ASSERT_ERR(item.type != ItemType.INT, CoreErrorType.UNEXPECTED_TYPE, "Expected int, but got: " + item.type);
             return (int)item.value;
         }
 
         // We expect a WavyItem to be a WavyFunction
         private WavyItem expect_wfunc(WavyItem item)
         {
-            ASSERT_ERR(!(item.type != typeof(WavyFunction)), CoreErrorType.UNEXPECTED_TYPE, "Expected WavyFunction, but got: " + item.type);
+            ASSERT_ERR(!(item.type != ItemType.FUNC), CoreErrorType.UNEXPECTED_TYPE, "Expected WavyFunction, but got: " + item.type);
             return item;
         }
 
         // We expect a WavyItem to be a WavyObject
         private WavyItem expect_wobject(WavyItem item)
         {
-            ASSERT_ERR(!(item.type != typeof(WavyObject)), CoreErrorType.UNEXPECTED_TYPE, "Expected WavyObject, but got: " + item.type);
+            ASSERT_ERR(!(item.type != ItemType.OBJECT), CoreErrorType.UNEXPECTED_TYPE, "Expected WavyObject, but got: " + item.type);
             return item;
         }
 

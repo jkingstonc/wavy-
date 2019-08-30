@@ -6,7 +6,7 @@ namespace wavynet.vm.data.items
     {
         public static WavyItem make_func()
         {
-            return new WavyItem(new WavyFunction(), typeof(WavyFunction));
+            return new WavyItem(new WavyFunction(), ItemType.FUNC);
         }
 
         public WavyItem call(List<WavyItem> args)
