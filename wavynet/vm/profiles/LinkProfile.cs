@@ -12,7 +12,7 @@ namespace wavynet.profile
     {
         public string[] dll_paths;
 
-        public LinkProfile(string[] dll_paths)
+        public void test_add(string[] dll_paths)
         {
             this.dll_paths = dll_paths;
         }

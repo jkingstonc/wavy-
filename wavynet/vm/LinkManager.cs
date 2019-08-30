@@ -5,6 +5,7 @@
 
 using System.Collections.Generic;
 using System.Reflection;
+using wavynet.profile;
 
 namespace wavynet.vm
 {
@@ -13,18 +14,20 @@ namespace wavynet.vm
      */
     public class LinkManager
     {
+        public LinkProfile link_profile;
         // Store assemblies
         public Dictionary<string, Assembly> assemblies;
 
-        public LinkManager()
+        public LinkManager(LinkProfile link_profile)
         {
+            this.link_profile = link_profile;
             this.assemblies = new Dictionary<string, Assembly>();
         }
 
         // Bind all dlls
-        public void bind_all_dll(string[] dll_paths)
+        public void bind_all_dll()
         {
-            foreach (string path in dll_paths)
+            foreach (string path in this.link_profile.dll_paths)
                 bind_dll(path);
         }
 

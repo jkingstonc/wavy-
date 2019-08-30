@@ -18,8 +18,6 @@ namespace wavynet.vm
         public BankManager bank_manager;
         public LinkManager link_manager;
 
-        public WCProfile wc_profile;
-
         // Should the vm emulate multi threading using multiple cores
         public static bool MULTI_CORE = true;
         // Should we cache the value retrieved from the bank for use in multiple cores
@@ -39,9 +37,10 @@ namespace wavynet.vm
         public void setup(WCProfile wc_profile)
         {
             this.state = VMState.setup();
-            this.bank_manager = new BankManager();
-            this.link_manager = new LinkManager();
-            this.link_manager.bind_all_dll(new string[] { @"F:\OneDrive - Lancaster University\programming\c#\DLLTest\bin\Debug\netstandard2.0\DLLTest.dll" });
+            this.bank_manager = new BankManager(wc_profile.bank_profile);
+            this.link_manager = new LinkManager(wc_profile.link_profile);
+            this.bank_manager.bind_bank_data();
+            this.link_manager.bind_all_dll();
         }
 
         public void start()
@@ -68,7 +67,6 @@ namespace wavynet.vm
                 this.core_manager = new CoreManager(this);
                 // Create and run the main core
                 this.core_manager.new_core_event += this.core_manager.create_and_run;
-                this.core_manager.new_core_event?.Invoke(this, new CoreCreateEventArgs(-1, sequence));
                 this.core_manager.new_core_event?.Invoke(this, new CoreCreateEventArgs(-1, sequence));
                 // Join all core threads to this (wait for all cores to finish)
                 this.core_manager.join_all_cores();

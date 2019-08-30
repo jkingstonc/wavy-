@@ -3,19 +3,22 @@
  * 22/08/19
  */
 using System.Collections.Generic;
+using wavynet.profile;
 
 namespace wavynet.vm.data
 {
     // BankManager controls muli-core access to Bank data
     public class BankManager
     {
+        public BankProfile bank_profile;
         // The data banks this vm uses
         public Bank m_bank, l_bank;
         // The item locks that this vm uses
         public Dictionary<int, ItemLock> m_lock, l_lock = null;
 
-        public BankManager()
+        public BankManager(BankProfile bank_profile)
         {
+            this.bank_profile = bank_profile;
             this.m_bank = new Bank(Bank.Type.MBank);
             this.l_bank = new Bank(Bank.Type.LBank);
 
@@ -26,6 +29,19 @@ namespace wavynet.vm.data
             }
         }
 
+        // Bind all the data in the bank_profile to the banks
+        public void bind_bank_data()
+        {
+            // Loop over each value in the bank profile (M & L) & bind the data to our banks
+            for(int i = 0; i < this.bank_profile.l_bank_data.Length; i++)
+            {
+                this.l_bank.add(i, this.bank_profile.l_bank_data[i]);
+                if (VM.MULTI_CORE)
+                {
+                    l_lock.Add(i, new ItemLock());
+                }
+            }
+        }
 
         // Used when an instruction wants to request access to a bank item
         // The request will only be granted if the item is available

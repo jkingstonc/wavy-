@@ -20,6 +20,11 @@ namespace wavynet.vm.data
             this.type = type;
         }
 
+        public void add(int id, WavyItem item)
+        {
+            this.bank_dict.Add(id, item);
+        }
+
         public Bank.Type get_type()
         {
             return this.type;
