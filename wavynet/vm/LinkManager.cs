@@ -48,14 +48,7 @@ namespace wavynet.vm
         // Bind the DLL for the native code that we want to use
         private void bind_dll(string name, string path)
         {
-            try
-            {
-                this.assemblies.Add(name, Assembly.LoadFile(path));
-            }
-            catch
-            {
-                ASSERT_ERR(true, VMErrorType.INVALID_CORE_COUNT, "couldn't load Assembly '"+path+"'");
-            }
-        }
+            this.assemblies.Add(name, Assembly.LoadFile(path));
+        }   
     }
 }

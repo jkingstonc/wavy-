@@ -62,7 +62,7 @@ namespace wavynet.vm
         // Add a new core to the pool
         public int add_core()
         {
-            this.vm.ASSERT_ERR(!VM.MULTI_CORE && this.next_id > 0, VMErrorType.INVALID_CORE_COUNT, "Cannot have multiple cores in single core mode!");
+            ASSERT_ERR(!VM.MULTI_CORE && this.next_id > 0, VMErrorType.INVALID_CORE_COUNT, "Cannot have multiple cores in single core mode!");
             int id = gen_id();
             this.core_pool.Add(id, new Core(this.vm, id));
             this.next_id++;
@@ -72,7 +72,7 @@ namespace wavynet.vm
         // Setup the core, after it has been registered to the pool
         public int setup_core(int id, Int32[] sequence)
         {
-            this.vm.ASSERT_ERR(!(this.core_pool.ContainsKey(id)), VMErrorType.INVALID_CORE_ID, "id: "+id);
+            ASSERT_ERR(!(this.core_pool.ContainsKey(id)), VMErrorType.INVALID_CORE_ID, "id: "+id);
             this.core_pool[id].setup(sequence);
             return id;
         }
@@ -80,7 +80,7 @@ namespace wavynet.vm
         // Start the core running
         public int start_core(int id)
         {
-            this.vm.ASSERT_ERR(!(this.core_pool.ContainsKey(id)), VMErrorType.INVALID_CORE_ID, "id: " + id);
+            ASSERT_ERR(!(this.core_pool.ContainsKey(id)), VMErrorType.INVALID_CORE_ID, "id: " + id);
             this.core_pool[id].run();
             return id;
         }
