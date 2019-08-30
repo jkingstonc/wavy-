@@ -33,8 +33,7 @@ namespace wavynet.vm
         BANK_ASSIGN,      // Assign a value to a variable in the bank
 
         NEW,              // Create a new WavyObject instance and push to the stack
-        INVOKE_FUNC,      // Invoke a function
-        INVOKE_METHOD,    // Invoke a method
+        INVOKE_FUNC,      // Invoke a function or method
 
         GOTO,             // Goto a given offset instruction
         IF_ZERO,          // If the val on the stack is zero, branch to the offset instruction

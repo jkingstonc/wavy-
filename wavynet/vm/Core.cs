@@ -64,7 +64,6 @@ namespace wavynet.vm
         // Run the core & start executing code
         public void run()
         {
-            Console.WriteLine(this.native_interface.call_native_func(this.vm.state.current_file, "add", new object[] { 1, 2 }));
             this.thread.Start();
             if (VM.CORE_DEBUG)
             {
@@ -161,6 +160,25 @@ namespace wavynet.vm
                                     goto_next();
                                     break;
                                 }
+                            case Opcode.INVOKE_FUNC:
+                                {
+                                    // Currently, this does not work with methods, only functions
+                                    WavyFunction func = (WavyFunction)request_bank_item(data.Bank.Type.MBank, get_arg());
+                                    // Check for the number of required arguments, and get them from the stack
+                                    WavyItem[] args = new WavyItem[func.args()];
+                                    for (int i = 0; i < func.args(); i++)
+                                        args[i] = pop_exec();
+                                    if(VM.TRACE_DEBUG)
+                                    {
+                                        func_call_trace(func, args);
+                                    }
+                                    else
+                                    {
+                                        func_call(func, args);
+                                    }
+                                    goto_next();
+                                    break;
+                                }
                             case Opcode.GOTO:
                                 {
                                     this.pc += get_arg();
@@ -251,21 +269,21 @@ namespace wavynet.vm
         }
 
         // We expect a WavyItem to be an int
-        private int expect_int(WavyItem item)
+        private dynamic expect_int(WavyItem item)
         {
             ASSERT_ERR(item.type != ItemType.INT, CoreErrorType.UNEXPECTED_TYPE, "Expected int, but got: " + item.type);
             return (int)item.value;
         }
 
         // We expect a WavyItem to be a WavyFunction
-        private WavyItem expect_wfunc(WavyItem item)
+        private dynamic expect_wfunc(WavyItem item)
         {
             ASSERT_ERR(!(item.type != ItemType.FUNC), CoreErrorType.UNEXPECTED_TYPE, "Expected WavyFunction, but got: " + item.type);
             return item;
         }
 
         // We expect a WavyItem to be a WavyObject
-        private WavyItem expect_wobject(WavyItem item)
+        private dynamic expect_wobject(WavyItem item)
         {
             ASSERT_ERR(!(item.type != ItemType.OBJECT), CoreErrorType.UNEXPECTED_TYPE, "Expected WavyObject, but got: " + item.type);
             return item;
@@ -308,25 +326,32 @@ namespace wavynet.vm
         }
 
         // Perform a function call with a trace
-        // WARNING: This is a dev version, it should not take a string, it should take a ref to a WavyFunction
-        private Trace func_call_trace(string name)
+        private Trace func_call_trace(WavyFunction func, WavyItem[] args)
         {
             // Then create a new Trace instance referencing that frame
-            Trace trace = new Trace(func_call(name));
+            Trace trace = new Trace(func_call(func, args));
             // Push the trace to the traceback
             this.traceback.push_call_trace(trace);
             return trace;
         }
 
         // Perform a function call
-        // WARNING: This is a dev version, it should not take a string, it should take a ref to a WavyFunction
-        private FuncFrame func_call(string name)
+        private FuncFrame func_call(WavyFunction func, WavyItem[] args)
         {
-            // First create a new FuncFrame to push to the function stack
-            FuncFrame frame = new FuncFrame(this, name, ExecStack.deep_copy(this, this.exec_stack));
-            // Then push the frame to the FuncStack
-            this.func_stack.push(frame);
-            return frame;
+            // Check if the function is native
+            if(func.is_native)
+            {
+                this.native_interface.call_native_func(this.vm.state.current_file, func.name, args);
+                return null;
+            }
+            else
+            {
+                // First create a new FuncFrame to push to the function stack
+                FuncFrame frame = new FuncFrame(this, func.name, ExecStack.deep_copy(this, this.exec_stack));
+                // Then push the frame to the FuncStack
+                this.func_stack.push(frame);
+                return frame;
+            }
         }
 
         // Check if we have reached the end
