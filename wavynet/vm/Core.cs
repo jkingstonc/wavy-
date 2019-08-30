@@ -37,6 +37,12 @@ namespace wavynet.vm
 
         private System.Diagnostics.Stopwatch watch;
 
+        // FOR DEBUGGING
+        // Do we want to display the currently executing instruction
+        public static bool INSTR_DEBUG = false;
+        // Do we want function calls to generate a traceback
+        public static bool TRACE_DEBUG = true;
+
         public Core(VM vm, int id)
         {
             this.vm = vm;
@@ -65,11 +71,7 @@ namespace wavynet.vm
         public void run()
         {
             this.thread.Start();
-            if (VM.CORE_DEBUG)
-            {
-                this.watch = System.Diagnostics.Stopwatch.StartNew();
-                Console.WriteLine("Core {" + this.state.id + "} starting...");
-            }
+            this.watch = System.Diagnostics.Stopwatch.StartNew();
         }
 
         // When we want the core to suspend execution
@@ -90,12 +92,7 @@ namespace wavynet.vm
         // Called when we want to close this core thread
         public CoreState close()
         {
-            if (VM.CORE_DEBUG)
-            {
-                // the code that you want to measure comes here
-                this.watch.Stop();
-                Console.WriteLine("Core {" + this.state.id + "} closing... took {"+ this.watch.Elapsed + "}");
-            }
+            this.watch.Stop();
             // Return an END state
             this.state.currently_interpreting = false;
             // Change the state of the multi_core_state
@@ -118,7 +115,7 @@ namespace wavynet.vm
                 {
                     Int32 op = get_next();
 
-                    if (VM.INSTR_DEBUG)
+                    if (INSTR_DEBUG)
                         Console.WriteLine("op: " + op);
 
                     // Surround the execute phase in a try catch, this is so the vm can return safely to the error handling
@@ -173,7 +170,7 @@ namespace wavynet.vm
                                     WavyItem[] args = new WavyItem[func.args()];
                                     for (int i = 0; i < func.args(); i++)
                                         args[i] = pop_exec();
-                                    if(VM.TRACE_DEBUG)
+                                    if(TRACE_DEBUG)
                                     {
                                         func_call_trace(func, args);
                                     }

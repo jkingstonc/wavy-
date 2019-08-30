@@ -23,12 +23,6 @@ namespace wavynet.vm
         // Should we cache the value retrieved from the bank for use in multiple cores
         public static bool MULTI_CORE_BANK_CACHING = true;
 
-        // FOR DEBUGGING
-        public static bool CORE_DEBUG = true;
-        public static bool INSTR_DEBUG = false;
-        public static bool TRACE_DEBUG = false;
-
-
         public VM()
         {
             this.thread = new Thread(() => run());
@@ -39,6 +33,7 @@ namespace wavynet.vm
         // It then creates a LinkManager, which in turn generates all Assemblies for required dll files
         public void setup(string current_file, WCProfile wc_profile)
         {
+            Wavy.logger.log("setting up VM for file '"+current_file+"'");
             this.state = VMState.setup(current_file);
             this.bank_manager = new BankManager(wc_profile.bank_profile);
             this.link_manager = new LinkManager();
@@ -48,16 +43,18 @@ namespace wavynet.vm
 
         public void start()
         {
+            Wavy.logger.log("starting VM");
             this.thread.Start();
         }
 
         public void close()
         {
-            Console.WriteLine("# closing vm #");
+            Wavy.logger.log("closing vm");
         }
 
         private void run()
         {
+            Wavy.logger.log("running vm");
             try
             {
                 int count = 2;
@@ -77,6 +74,7 @@ namespace wavynet.vm
             // This should actually catch CoreErrExceptions aswel as we need to handle those appropriately
             catch (VMErrException)
             {
+                Wavy.logger.log("caught vm error!");
                 this.core_manager.abort_all();
                 this.state.err_handler.say_latest();
             }
