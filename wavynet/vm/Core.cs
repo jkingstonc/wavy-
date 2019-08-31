@@ -93,18 +93,6 @@ namespace wavynet.vm
             this.state.multi_core_state = MultiCoreState.RUNNING;
         }
 
-        // Called when we want to close this core thread
-        public override void close()
-        {
-            base.close();
-            this.watch.Stop();
-            // Return an END state
-            this.state.currently_interpreting = false;
-            // Change the state of the multi_core_state
-            this.state.multi_core_state = MultiCoreState.DONE;
-            this.vm.core_manager.close_core(this.state.id);
-        }
-
         // Main fde cycle
         public void evaluate_sequence()
         {
@@ -266,6 +254,18 @@ namespace wavynet.vm
                 }
             }
             close();
+        }
+
+        // Called when we want to close this core thread
+        public override void close()
+        {
+            this.watch.Stop();
+            LOG("closing after " + watch.ElapsedMilliseconds + " millis");
+            // Return an END state
+            this.state.currently_interpreting = false;
+            // Change the state of the multi_core_state
+            this.state.multi_core_state = MultiCoreState.DONE;
+            this.vm.core_manager.close_core(this.state.id);
         }
 
         // We expect a WavyItem to be a numeric
