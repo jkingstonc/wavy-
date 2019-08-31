@@ -24,9 +24,8 @@ namespace wavynet.vm
         private Dictionary<int, Core> core_pool;
         private int next_id = 0;
 
-        public CoreManager(VM vm)
+        public CoreManager(VM vm) : base("CoreManager")
         {
-            this.component_id = "CoreManager";
             this.vm = vm;
             this.core_pool = new Dictionary<int, Core>();
         }
@@ -54,15 +53,15 @@ namespace wavynet.vm
         public void create_and_run(object sender, EventArgs args)
         {
             int id = add_core();
+            LOG("creating & starting new core '" + id + "'");
             setup_core(id, ((CoreCreateEventArgs)args).bytecode);
             start_core(id);
-            Wavy.logger.log("[" + this.component_id + "] " + "creating & starting new core '" + id + "'");
         }
 
         // Add a new core to the pool
         public int add_core()
         {
-            this.vm.ASSERT_ERR(!VM.MULTI_CORE && this.next_id > 0, VMErrorType.INVALID_CORE_COUNT, "Cannot have multiple cores in single core mode!");
+            ASSERT_ERR(!VM.MULTI_CORE && this.next_id > 0, VMErrorType.INVALID_CORE_COUNT, "Cannot have multiple cores in single core mode!");
             int id = gen_id();
             this.core_pool.Add(id, new Core(this.vm, id));
             this.next_id++;
@@ -72,7 +71,7 @@ namespace wavynet.vm
         // Setup the core, after it has been registered to the pool
         public int setup_core(int id, Int32[] sequence)
         {
-            this.vm.ASSERT_ERR(!(this.core_pool.ContainsKey(id)), VMErrorType.INVALID_CORE_ID, "id: "+id);
+            ASSERT_ERR(!(this.core_pool.ContainsKey(id)), VMErrorType.INVALID_CORE_ID, "id: "+id);
             this.core_pool[id].setup(sequence);
             return id;
         }
@@ -80,7 +79,7 @@ namespace wavynet.vm
         // Start the core running
         public int start_core(int id)
         {
-            this.vm.ASSERT_ERR(!(this.core_pool.ContainsKey(id)), VMErrorType.INVALID_CORE_ID, "id: " + id);
+            ASSERT_ERR(!(this.core_pool.ContainsKey(id)), VMErrorType.INVALID_CORE_ID, "id: " + id);
             this.core_pool[id].run();
             return id;
         }
@@ -88,7 +87,7 @@ namespace wavynet.vm
         // Close the core running
         public void close_core(int id)
         {
-            Wavy.logger.log("["+this.component_id+"] "+"closing core '" + id + "'");
+            LOG("closing core '" + id + "'");
             this.core_pool.Remove(id);
             // If we have done with all cores, trigger the close vm event
             if (this.core_pool.Count == 0)
@@ -99,7 +98,7 @@ namespace wavynet.vm
         // We wait until the core_pool is empty and then we can close the vm
         public void join_all_cores()
         {
-            Wavy.logger.log("[" + this.component_id + "] " + "joining thread to all cores");
+            LOG("joining thread to all cores");
             // This thread will block here until the close_vm_event is sent.
             end_vm_event.WaitOne();
             end_vm_event.Reset();

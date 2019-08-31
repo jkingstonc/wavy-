@@ -14,17 +14,13 @@ namespace wavynet.vm
      * Represents a vm core
      * Performs fde cycle
     */
-    public class Core
+    public class Core : CoreComponent
     {
         private VM vm;
         private NativeInterface native_interface;
         public Thread thread;
-        // Holds information about the current state of this core
-        public CoreState state;
         // Program counter
         public int pc;
-        // Store the operations the core has carried out
-        public TraceBack traceback;
         // The bytecode that the core is executing
         public Int32[] bytecode;
         // The function stack that this core is using
@@ -43,7 +39,7 @@ namespace wavynet.vm
         // Do we want function calls to generate a traceback
         public static bool TRACE_DEBUG = true;
 
-        public Core(VM vm, int id)
+        public Core(VM vm, int id) : base("Core", id)
         {
             this.vm = vm;
             this.native_interface = new NativeInterface(this.vm, this);
@@ -68,8 +64,9 @@ namespace wavynet.vm
         }
 
         // Run the core & start executing code
-        public void run()
+        public override void run()
         {
+            base.run();
             this.thread.Start();
             this.watch = System.Diagnostics.Stopwatch.StartNew();
         }
@@ -77,7 +74,7 @@ namespace wavynet.vm
         // When we want the core to suspend execution
         public void suspend()
         {
-            this.ASSERT_ERR(this.state.multi_core_state == MultiCoreState.SUSPENDED, CoreErrorType.INVALID_MULTICORE_STATE, "Cannot suspend core that has already been suspended!");
+            ASSERT_ERR(this.state.multi_core_state == MultiCoreState.SUSPENDED, CoreErrorType.INVALID_MULTICORE_STATE, "Cannot suspend core that has already been suspended!");
             this.state.multi_core_state = MultiCoreState.SUSPENDED;
 
         }
@@ -85,24 +82,24 @@ namespace wavynet.vm
         // When we want to resume the core operation
         public void resume()
         {
-            this.ASSERT_ERR(this.state.multi_core_state != MultiCoreState.SUSPENDED, CoreErrorType.INVALID_MULTICORE_STATE, "Cannot resume core that has not been suspended!");
+            ASSERT_ERR(this.state.multi_core_state != MultiCoreState.SUSPENDED, CoreErrorType.INVALID_MULTICORE_STATE, "Cannot resume core that has not been suspended!");
             this.state.multi_core_state = MultiCoreState.RUNNING;
         }
 
         // Called when we want to close this core thread
-        public CoreState close()
+        public override void close()
         {
+            base.close();
             this.watch.Stop();
             // Return an END state
             this.state.currently_interpreting = false;
             // Change the state of the multi_core_state
             this.state.multi_core_state = MultiCoreState.DONE;
             this.vm.core_manager.close_core(this.state.id);
-            return this.state;
         }
 
         // Main fde cycle
-        public CoreState evaluate_sequence()
+        public void evaluate_sequence()
         {
             // Initialise the state of the multi_core_state
             this.state.multi_core_state = MultiCoreState.RUNNING;
@@ -128,7 +125,7 @@ namespace wavynet.vm
                                 {
                                     // Return an END state
                                     this.state.currently_interpreting = false;
-                                    return this.state;
+                                    break;
                                 }
                             case Opcode.NOP:
                                 {
@@ -250,7 +247,7 @@ namespace wavynet.vm
                         }
 
                         // Program counter is out of range
-                        ASSERT_ERR(pc < 0 || pc > MAX_PC, CoreErrorType.INVALID_PC_RANGE);
+                        ASSERT_ERR( pc < 0 || pc > MAX_PC, CoreErrorType.INVALID_PC_RANGE);
                     }
                     catch (CoreErrException e)
                     {
@@ -261,7 +258,7 @@ namespace wavynet.vm
                     }
                 }
             }
-            return close();
+            close();
         }
 
         // We expect a WavyItem to be a numeric
@@ -309,23 +306,6 @@ namespace wavynet.vm
         private void release_bank_item(data.Bank.Type type, int id)
         {
             this.vm.bank_manager.release_item(this, type, id);
-        }
-
-        // Used when we may need to register an error (for convenience like a macro)
-        public void ASSERT_ERR(bool condition, CoreErrorType type, string msg = null)
-        {
-            if (condition)
-                push_err(type, msg);
-        }
-
-        // Push an error to the cores' error handler
-        public void push_err(CoreErrorType type, string msg = null)
-        {
-            CoreError err = new CoreError(this.state, this.traceback, type, msg);
-            // Register the error with the handler
-            this.state.err_handler.register_err(err);
-            this.state.had_err = true;
-            throw new CoreErrException(err);
         }
 
         // Perform a function call with a trace

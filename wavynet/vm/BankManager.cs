@@ -16,9 +16,8 @@ namespace wavynet.vm.data
         // The item locks that this vm uses
         public Dictionary<int, ItemLock> m_lock, l_lock = null;
 
-        public BankManager(BankProfile bank_profile)
+        public BankManager(BankProfile bank_profile) : base("BankManger")
         {
-            this.component_id = "BankManager";
             this.bank_profile = bank_profile;
         }
 
@@ -40,7 +39,7 @@ namespace wavynet.vm.data
         // Bind all the data in the bank_profile to the banks
         public void bind_bank_data()
         {
-            Wavy.logger.log("[" + this.component_id + "] " + "binding all bank data from profile");
+            LOG("binding all bank data from profile");
             // Loop over each value in the bank profile (M & L) & bind the data to our banks
             for (int i = 0; i < this.bank_profile.l_bank_data.Length; i++)
             {

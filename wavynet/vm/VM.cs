@@ -19,13 +19,12 @@ namespace wavynet.vm
         public LinkManager link_manager;
 
         // Should the vm emulate multi threading using multiple cores
-        public static bool MULTI_CORE = true;
+        public static bool MULTI_CORE = false;
         // Should we cache the value retrieved from the bank for use in multiple cores
         public static bool MULTI_CORE_BANK_CACHING = true;
 
-        public VM()
+        public VM() : base("VM")
         {
-            this.component_id = "VM";
             this.thread = new Thread(() => run());
         }
 
@@ -34,7 +33,7 @@ namespace wavynet.vm
         // It then creates a LinkManager, which in turn generates all Assemblies for required dll files
         public void setup(string current_file, WCProfile wc_profile)
         {
-            Wavy.logger.log("[" + this.component_id + "] " + "setting up VM for file '" + current_file+"'");
+            LOG("setting up VM for file '" + current_file+"'");
             VM.state = VMState.setup(current_file);
             this.bank_manager = new BankManager(wc_profile.bank_profile);
             this.link_manager = new LinkManager();
@@ -62,13 +61,14 @@ namespace wavynet.vm
                 // Create and run the main core
                 this.core_manager.new_core_event += this.core_manager.create_and_run;
                 this.core_manager.new_core_event?.Invoke(this, new CoreCreateEventArgs(-1, sequence));
+                this.core_manager.new_core_event?.Invoke(this, new CoreCreateEventArgs(-1, sequence));
                 // Join all core threads to this (wait for all cores to finish)
                 this.core_manager.join_all_cores();
             }
             // This should actually catch CoreErrExceptions aswel as we need to handle those appropriately
             catch (VMErrException)
             {
-                Wavy.logger.log("caught vm error!");
+                LOG("caught vm error!");
                 this.core_manager.abort_all();
                 VM.state.err_handler.say_latest();
             }
