@@ -8,7 +8,6 @@ using System.Threading;
 using wavynet.profile;
 using wavynet.vm.core;
 using wavynet.vm.data;
-using wavynet.vm.data.gc;
 using wavynet.vm.native;
 
 namespace wavynet.vm
@@ -20,14 +19,11 @@ namespace wavynet.vm
         public CoreManager core_manager;
         public BankManager bank_manager;
         public LinkManager link_manager;
-        public GarbageManager garbage_manager;
 
         // Should the vm emulate multi threading using multiple cores
         public static bool MULTI_CORE = false;
         // Should we cache the value retrieved from the bank for use in multiple cores
         public static bool MULTI_CORE_BANK_CACHING = true;
-        // Should the VM handle gc rather than the .NET runtime
-        public static bool GARBAGE_COLLECTION = true;
 
         public VM() : base("VM")
         {
@@ -44,11 +40,9 @@ namespace wavynet.vm
             this.core_manager = new CoreManager(this);
             this.bank_manager = new BankManager(wc_profile.bank_profile);
             this.link_manager = new LinkManager();
-            this.garbage_manager = new GarbageManager(this.bank_manager);
             this.core_manager.setup();
             this.bank_manager.setup();
             this.link_manager.setup();
-            this.garbage_manager.setup();
         }
 
         public override void start()
@@ -57,8 +51,6 @@ namespace wavynet.vm
             this.core_manager.start();
             this.bank_manager.start();
             this.link_manager.start();
-            if(VM.GARBAGE_COLLECTION)
-                this.garbage_manager.start();
             this.thread.Start();
         }
 
@@ -71,8 +63,6 @@ namespace wavynet.vm
                 { 
                     (Int32)Opcode.END,
                 };
-                if (VM.GARBAGE_COLLECTION)
-                    this.garbage_manager.run();
                 // Create and run the main core
                 this.core_manager.new_core_event += this.core_manager.create_and_run;
                 this.core_manager.new_core_event?.Invoke(this, new CoreCreateEventArgs(-1, sequence));
@@ -94,8 +84,6 @@ namespace wavynet.vm
             this.core_manager.close();
             this.bank_manager.close();
             this.link_manager.close();
-            if (VM.GARBAGE_COLLECTION)
-                this.garbage_manager.close();
         }
     }
 
