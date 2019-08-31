@@ -40,7 +40,6 @@ namespace wavynet.vm
         {
             return new Dictionary<string, string>() {
                 { "TestFile", @"F:\OneDrive - Lancaster University\programming\c#\DLLTest\bin\Debug\netstandard2.0\DLLTest.dll" },
-                //{ "TestFile", @"C:\Users\44778\OneDrive - Lancaster University\programming\c#\DLLTest\bin\Debug\netstandard2.0\DLLTest.dll" },
             };
         }
 
