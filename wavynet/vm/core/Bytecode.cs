@@ -7,23 +7,24 @@ namespace wavynet.vm.core
 {
     public enum Opcode
     {
+        PRINT = -1,
         END = 0x0,      // End of a bytecode sequence
         NOP = 0x1,      // No-Operations [we skip this]
 
-        POP_EXEC,       // Pop the top item from the execution stack
+        POP_EXEC = 0x2,       // Pop the top item from the execution stack
 
-        UN_NOT,         // Binary not
-        UN_POSITIVE,    // Positive value of a numeric value
-        UN_NEGATIVE,    // Negative value of a numeric value
+        UN_NOT = 0x3,         // Binary not
+        UN_POSITIVE = 0x4,    // Positive value of a numeric value
+        UN_NEGATIVE = 0x5,    // Negative value of a numeric value
 
-        BIN_ADD,
-        BIN_SUB,
-        BIN_MUL,
-        BIN_DIV,
-        BIN_MOD,
-        BIN_REM,
+        BIN_ADD = 0x6,
+        BIN_SUB = 0x7,
+        BIN_MUL = 0x8,
+        BIN_DIV = 0x9,
+        BIN_MOD = 0xA,
+        BIN_REM = 0xB,
 
-        LD_LIT,           // Load a literal from the LBank to the stack
+        LD_LIT = 0xC,           // Load a literal from the LBank to the stack
         LD_VAR,           // Load a var from the MBank to the stack
         LD_LOC,           // Load a local variable to the stack
 

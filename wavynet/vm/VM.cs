@@ -19,29 +19,32 @@ namespace wavynet.vm
         public CoreManager core_manager;
         public BankManager bank_manager;
         public LinkManager link_manager;
+        public WCProfile wc_profile;
 
         // Should the vm emulate multi threading using multiple cores
         public static bool MULTI_CORE = false;
         // Should we cache the value retrieved from the bank for use in multiple cores
         public static bool MULTI_CORE_BANK_CACHING = true;
 
-        public VM() : base("VM")
+        public VM(WCProfile wc_profile) : base("VM")
         {
             this.thread = new Thread(() => run());
+            this.wc_profile = wc_profile;
         }
 
         // On setup, the vm initialises the VM state
         // It then initialises the BankManager, which in turn registers all the file bank data to the Bank's in memory
         // It then creates a LinkManager, which in turn generates all Assemblies for required dll files
-        public void setup(string current_file, WCProfile wc_profile)
+        public override void setup()
         {
-            LOG("setting up '" + current_file+"'");
-            VM.state = VMState.setup(current_file);
+            LOG("setting up '" + this.wc_profile.file+"'");
+            VM.state = VMState.setup(this.wc_profile.file);
             this.core_manager = new CoreManager(this);
-            this.bank_manager = new BankManager(wc_profile.bank_profile);
+            this.bank_manager = new BankManager();
             this.link_manager = new LinkManager();
+
             this.core_manager.setup();
-            this.bank_manager.setup();
+            this.bank_manager.setup(wc_profile.lbank);
             this.link_manager.setup();
         }
 
@@ -59,13 +62,9 @@ namespace wavynet.vm
             base.run();
             try
             {
-                Int32[] sequence = new Int32[] 
-                { 
-                    (Int32)Opcode.END,
-                };
                 // Create and run the main core
                 this.core_manager.new_core_event += this.core_manager.create_and_run;
-                this.core_manager.new_core_event?.Invoke(this, new CoreCreateEventArgs(-1, sequence));
+                this.core_manager.new_core_event?.Invoke(this, new CoreCreateEventArgs(-1, this.wc_profile.bytecode));
                 // Join all core threads to this (wait for all cores to finish)
                 this.core_manager.join_all_cores();
             }

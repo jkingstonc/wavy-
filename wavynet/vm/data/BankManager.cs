@@ -11,18 +11,16 @@ namespace wavynet.vm.data
     // BankManager controls muli-core access to Bank data
     public class BankManager : VMComponent
     {
-        public BankProfile bank_profile;
         // The data banks this vm uses
         public Bank m_bank, l_bank;
         // The item locks that this vm uses
         public Dictionary<int, ItemLock> m_lock, l_lock = null;
 
-        public BankManager(BankProfile bank_profile) : base("BankManger")
+        public BankManager() : base("BankManger")
         {
-            this.bank_profile = bank_profile;
         }
 
-        public override void setup()
+        public void setup(WavyItem[] lbank)
         {
             base.setup();
             this.m_bank = new Bank(Bank.Type.MBank);
@@ -34,17 +32,17 @@ namespace wavynet.vm.data
                 l_lock = new Dictionary<int, ItemLock>();
             }
 
-            bind_bank_data();
+            bind_lbank_data(lbank);
         }
 
-        // Bind all the data in the bank_profile to the banks
-        public void bind_bank_data()
+        // Bind all the lbank data
+        public void bind_lbank_data(WavyItem[] lbank)
         {
             LOG("binding all bank data from profile");
             // Loop over each value in the bank profile (M & L) & bind the data to our banks
-            for (int i = 0; i < this.bank_profile.l_bank_data.Length; i++)
+            for (int i = 0; i < lbank.Length; i++)
             {
-                this.l_bank.add(i, this.bank_profile.l_bank_data[i]);
+                this.l_bank.add(i, lbank[i]);
                 if (VM.MULTI_CORE)
                 {
                     l_lock.Add(i, new ItemLock());

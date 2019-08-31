@@ -118,6 +118,13 @@ namespace wavynet.vm.core
                     {
                         switch ((Opcode)op)
                         {
+                            case Opcode.PRINT:
+                                {
+                                    Console.ForegroundColor = ConsoleColor.Green;
+                                    Console.WriteLine(pop_exec().value);
+                                    goto_next();
+                                    break;
+                                }
                             case Opcode.END:
                                 {
                                     // Return an END state
