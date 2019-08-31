@@ -61,14 +61,12 @@ namespace wavynet.vm
                 // Create and run the main core
                 this.core_manager.new_core_event += this.core_manager.create_and_run;
                 this.core_manager.new_core_event?.Invoke(this, new CoreCreateEventArgs(-1, sequence));
-                this.core_manager.new_core_event?.Invoke(this, new CoreCreateEventArgs(-1, sequence));
                 // Join all core threads to this (wait for all cores to finish)
                 this.core_manager.join_all_cores();
             }
             // This should actually catch CoreErrExceptions aswel as we need to handle those appropriately
             catch (VMErrException)
             {
-                LOG("caught vm error!");
                 this.core_manager.abort_all();
                 VM.state.err_handler.say_latest();
             }
