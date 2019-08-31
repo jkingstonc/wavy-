@@ -51,8 +51,9 @@ namespace wavynet.vm
         }
 
         // Setup the core thread
-        public void setup(Int32[] sequence)
+        public override void setup(Int32[] sequence)
         {
+            base.setup();
             this.bytecode = sequence;
             this.state.opcode_count = sequence.Length;
             this.state.multi_core_state = MultiCoreState.READY;
@@ -61,6 +62,12 @@ namespace wavynet.vm
             this.thread = new Thread(() => {
                 this.evaluate_sequence();
                 });
+        }
+
+        public override void start()
+        {
+            base.start();
+            this.run();
         }
 
         // Run the core & start executing code

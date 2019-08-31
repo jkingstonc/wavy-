@@ -80,7 +80,7 @@ namespace wavynet.vm
         public int start_core(int id)
         {
             ASSERT_ERR(!(this.core_pool.ContainsKey(id)), VMErrorType.INVALID_CORE_ID, "id: " + id);
-            this.core_pool[id].run();
+            this.core_pool[id].start();
             return id;
         }
 

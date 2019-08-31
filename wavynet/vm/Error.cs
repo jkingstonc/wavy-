@@ -26,6 +26,7 @@ namespace wavynet.vm
     {
         public override void say_latest()
         {
+            Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine("** CORE "+ ((CoreError)errs[count]).get_state().id+ " ERROR ["+ ((CoreError)errs[count]).get_type()+"]**");
             if (errs[count].get_msg() != null)
                 Console.WriteLine("'" + errs[count].get_msg() + "'");
@@ -38,6 +39,7 @@ namespace wavynet.vm
     {
         public override void say_latest()
         {
+            Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine("** VM ERROR [" + ((VMError)errs[count]).get_type() + "]**");
             if(errs[count].get_msg() != null)
                 Console.WriteLine("'" + errs[count].get_msg() + "'");

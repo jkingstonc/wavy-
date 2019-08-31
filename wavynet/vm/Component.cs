@@ -2,6 +2,8 @@
  * James Clarke
  * 22/08/19
  */
+using System;
+
 namespace wavynet.vm
 {
     /*
@@ -60,6 +62,11 @@ namespace wavynet.vm
         public CoreComponent(string component_id, int core_id) : base(component_id+core_id)
         {
 
+        }
+
+        public virtual void setup(Int32[] sequence)
+        {
+            base.setup();
         }
 
         // Used when we may need to register an error (for convenience like a macro)

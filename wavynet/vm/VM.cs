@@ -33,10 +33,12 @@ namespace wavynet.vm
         // It then creates a LinkManager, which in turn generates all Assemblies for required dll files
         public void setup(string current_file, WCProfile wc_profile)
         {
-            LOG("setting up VM for file '" + current_file+"'");
+            LOG("setting up '" + current_file+"'");
             VM.state = VMState.setup(current_file);
+            this.core_manager = new CoreManager(this);
             this.bank_manager = new BankManager(wc_profile.bank_profile);
             this.link_manager = new LinkManager();
+            this.core_manager.setup();
             this.bank_manager.setup();
             this.link_manager.setup();
         }
@@ -57,7 +59,6 @@ namespace wavynet.vm
                     (Int32)Opcode.END,
                 };
 
-                this.core_manager = new CoreManager(this);
                 // Create and run the main core
                 this.core_manager.new_core_event += this.core_manager.create_and_run;
                 this.core_manager.new_core_event?.Invoke(this, new CoreCreateEventArgs(-1, sequence));
@@ -76,6 +77,7 @@ namespace wavynet.vm
         public override void close()
         {
             base.close();
+            this.core_manager.close();
             this.bank_manager.close();
             this.link_manager.close();
         }
