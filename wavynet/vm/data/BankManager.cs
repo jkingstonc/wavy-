@@ -85,6 +85,11 @@ namespace wavynet.vm.data
             return null;
         }
 
+        public void assign_item(Core core, int id, WavyItem item)
+        {
+            this.m_bank.set(id, item);
+        }
+
         // Called when the core is done with a bank item
         public void release_item(Core core, Bank.Type bank_type, int id)
         {

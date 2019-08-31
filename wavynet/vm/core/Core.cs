@@ -27,6 +27,8 @@ namespace wavynet.vm.core
         public FuncStack func_stack;
         // The execution stack that this core is using
         public ExecStack exec_stack;
+        // The array of locals that the current function operates on
+        public WavyItem[] locals;
 
         // The max Program Counter, this determines program length
         public const int MAX_PC = 65536; // 2^16
@@ -149,19 +151,59 @@ namespace wavynet.vm.core
                                     goto_next();
                                     break;
                                 }
+                            case Opcode.LD_LOC:
+                                {
+                                    Int32 id = get_arg();
+                                    // Check if we are actually in a function
+                                    ASSERT_ERR(this.state.func_depth > 0, CoreErrorType.INVALID_LOCAL, "Cannot load local from non-function state!");
+                                    goto_next();
+                                    break;
+                                }
+                            case Opcode.BANK_VAR:
+                                {
+                                    Int32 id = get_arg();
+                                    request_bank_item(data.Bank.Type.MBank, id);
+                                    assign_bank_item(id, pop_exec());
+                                    release_bank_item(data.Bank.Type.MBank, id);
+                                    goto_next();
+                                    break;
+                                }
+                            case Opcode.BANK_ASSIGN:
+                                {
+                                    goto_next();
+                                    break;
+                                }
+                            case Opcode.LOCAL_ASSIGN:
+                                {
+                                    goto_next();
+                                    break;
+                                }
+                            case Opcode.MAKE_CLASS:
+                                {
+                                    break;
+                                }
+                            case Opcode.MAKE_FUNC:
+                                {
+                                    break;
+                                }
+                            case Opcode.NEW:
+                            {
+                                break;
+                            }
                             case Opcode.INVOKE_FUNC:
                                 {
                                     /* WARNING
-                                    * This should not work on multiple threads, becuase we are only releasing the function from the bank
-                                    * when we are done with the function call. We should handle bank requests smarter than this!
+                                    * This will have undefined side effects on multi-core mode, the reason being, we release the
+                                    * function id before it is called. This means during execution, the function may change...
                                      */
                                     Int32 id = get_arg();
                                     // Currently, this does not work with methods, only functions
                                     WavyFunction func = (WavyFunction)request_bank_item(data.Bank.Type.MBank, id);
                                     // Check for the number of required arguments, and get them from the stack
-                                    WavyItem[] args = new WavyItem[func.args()];
-                                    for (int i = 0; i < func.args(); i++)
+                                    WavyItem[] args = new WavyItem[func.args_size];
+                                    for (int i = 0; i < func.args_size; i++)
                                         args[i] = pop_exec();
+                                    release_bank_item(data.Bank.Type.MBank, id);
                                     if(TRACE_DEBUG)
                                     {
                                         func_call_trace(func, args);
@@ -170,7 +212,6 @@ namespace wavynet.vm.core
                                     {
                                         func_call(func, args);
                                     }
-                                    release_bank_item(data.Bank.Type.MBank, id);
                                     goto_next();
                                     break;
                                 }
@@ -309,6 +350,12 @@ namespace wavynet.vm.core
             return item;
         }
 
+        // Assign a bank item to the MBank
+        private void assign_bank_item(int id, WavyItem item)
+        {
+            this.vm.bank_manager.assign_item(this, id, item);
+        }
+
         // Release a WavyItem from the BankManager
         private void release_bank_item(data.Bank.Type type, int id)
         {
@@ -340,6 +387,7 @@ namespace wavynet.vm.core
                 FuncFrame frame = new FuncFrame(this, func.name, ExecStack.deep_copy(this, this.exec_stack));
                 // Then push the frame to the FuncStack
                 this.func_stack.push(frame);
+                this.locals = new WavyItem[func.locals_size];
                 return frame;
             }
         }

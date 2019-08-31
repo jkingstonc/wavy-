@@ -71,14 +71,14 @@ namespace wavynet.vm
         }
 
         // Used when we may need to register an error (for convenience like a macro)
-        public void ASSERT_ERR(bool condition, dynamic err_type, string msg = null)
+        public void ASSERT_ERR(bool condition, CoreErrorType err_type, string msg = null)
         {
             if (condition)
                 push_err(err_type, msg);
         }
 
         // Push an error to the cores' error handler
-        public void push_err(dynamic err_type, string msg = null)
+        public void push_err(CoreErrorType err_type, string msg = null)
         {
             CoreError err = new CoreError(this.state, this.traceback, err_type, msg);
             // Register the error with the handler
@@ -100,14 +100,14 @@ namespace wavynet.vm
         }
 
         // Used when we may need to register an error (for convenience like a macro)
-        public void ASSERT_ERR(bool condition, dynamic err_type, string msg = null)
+        public void ASSERT_ERR(bool condition, VMErrorType err_type, string msg = null)
         {
             if (condition)
                 push_err(err_type, msg);
         }
 
         // Push an error to the cores' error handler
-        public void push_err(dynamic err_type, string msg = null)
+        public void push_err(VMErrorType err_type, string msg = null)
         {
             VMError err = new VMError(VM.state, err_type, msg);
             // Register the error with the handler

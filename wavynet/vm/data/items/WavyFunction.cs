@@ -1,11 +1,14 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace wavynet.vm.data.items
 {
     public class WavyFunction : WavyItem
     {
         public string name;
-        private int arg_count;
+        public int args_size;
+        public int locals_size;
+        public Int32[] bytecode;
 
         // Used for native functions, if native, we need to be able to resolve the dll file
         public bool is_native;
@@ -14,12 +17,8 @@ namespace wavynet.vm.data.items
         public WavyFunction(string name) : base(null, ItemType.FUNC)
         {
             this.name = name;
-            this.arg_count = 0;
-        }
-
-        public int args()
-        {
-            return this.arg_count;
+            this.args_size = 0;
+            this.locals_size = 0;
         }
 
         public static WavyItem make_func()
