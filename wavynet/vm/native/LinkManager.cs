@@ -6,7 +6,7 @@
 using System.Collections.Generic;
 using System.Reflection;
 
-namespace wavynet.vm
+namespace wavynet.vm.native
 {
     /*
      * Handles all linkage functionality for the vm

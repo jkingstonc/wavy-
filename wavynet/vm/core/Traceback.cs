@@ -6,7 +6,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace wavynet.vm
+namespace wavynet.vm.core
 {
     // A traceback contains information about wavycore actions
     public class TraceBack

@@ -4,6 +4,7 @@
  */
 using System.Collections.Generic;
 using wavynet.profile;
+using wavynet.vm.core;
 
 namespace wavynet.vm.data
 {

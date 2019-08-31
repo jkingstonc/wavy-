@@ -3,6 +3,7 @@
  * 22/08/19
  */
 using System;
+using wavynet.vm.core;
 
 namespace wavynet.vm
 {

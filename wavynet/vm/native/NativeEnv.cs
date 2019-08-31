@@ -3,6 +3,8 @@
  * 22/08/19
  */
 
+using wavynet.vm.core;
+
 namespace wavynet.vm.native
 {
     /*

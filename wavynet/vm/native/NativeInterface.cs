@@ -6,6 +6,7 @@
 using System;
 using System.Reflection;
 using wavynet.file;
+using wavynet.vm.core;
 
 namespace wavynet.vm.native
 {

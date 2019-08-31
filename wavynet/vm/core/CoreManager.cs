@@ -7,7 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 
-namespace wavynet.vm
+namespace wavynet.vm.core
 {
     /* 
      * Handles threading of cores

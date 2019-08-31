@@ -8,7 +8,7 @@ using System.Threading;
 using wavynet.vm.data.items;
 using wavynet.vm.native;
 
-namespace wavynet.vm
+namespace wavynet.vm.core
 {
     /* 
      * Represents a vm core

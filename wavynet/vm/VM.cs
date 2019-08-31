@@ -6,7 +6,9 @@
 using System;
 using System.Threading;
 using wavynet.profile;
+using wavynet.vm.core;
 using wavynet.vm.data;
+using wavynet.vm.native;
 
 namespace wavynet.vm
 {
