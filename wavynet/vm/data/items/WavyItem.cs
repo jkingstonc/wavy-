@@ -28,5 +28,6 @@ namespace wavynet.vm
         FUNC,
         OBJECT,
         CLASS,
+        NULL,
     }
 }

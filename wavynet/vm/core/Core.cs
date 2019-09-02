@@ -21,14 +21,14 @@ namespace wavynet.vm.core
         public Thread thread;
         // Program counter
         public int pc;
+        // The array of locals that the current function operates on
+        public WavyItem[] locals;
         // The bytecode that the core is executing
         public Int32[] bytecode;
         // The function stack that this core is using
         public FuncStack func_stack;
         // The execution stack that this core is using
         public ExecStack exec_stack;
-        // The array of locals that the current function operates on
-        public WavyItem[] locals;
 
         // The max Program Counter, this determines program length
         public const int MAX_PC = 65536; // 2^16
@@ -47,6 +47,7 @@ namespace wavynet.vm.core
             this.native_interface = new NativeInterface(this.vm, this);
             this.state = CoreState.setup(id);
             this.pc = 0;
+            this.locals = new WavyItem[0];
             this.traceback = new TraceBack();
             this.func_stack = new FuncStack(this);
             this.exec_stack = new ExecStack(this);
@@ -64,6 +65,27 @@ namespace wavynet.vm.core
             this.thread = new Thread(() => {
                 this.evaluate_sequence();
                 });
+
+            this.bytecode = new Int32[]
+            {
+                (Int32)Opcode.LD_LIT, 0, // Load 123
+                (Int32)Opcode.LD_LIT, 1, // Load 456
+                (Int32)Opcode.LD_VAR, 0, // Load func
+                (Int32)Opcode.INVOKE_FUNC,
+                (Int32)Opcode.PRINT,
+                (Int32)Opcode.END,
+            };
+            this.state.opcode_count = this.bytecode.Length;
+
+            this.vm.bank_manager.m_bank.add(0, new WavyFunction("test_func_1", 2, 0, new Int32[]
+            {
+                (Int32)Opcode.LD_LOC, 0,
+                (Int32)Opcode.PRINT,
+                (Int32)Opcode.LD_LOC, 1,
+                (Int32)Opcode.PRINT,
+                (Int32)Opcode.PSH_NULL,
+                (Int32)Opcode.RETURN,
+            }));
         }
 
         public override void start()
@@ -160,9 +182,12 @@ namespace wavynet.vm.core
                                 }
                             case Opcode.LD_LOC:
                                 {
-                                    Int32 id = get_arg();
                                     // Check if we are actually in a function
                                     ASSERT_ERR(this.state.func_depth > 0, CoreErrorType.INVALID_LOCAL, "Cannot load local from non-function state!");
+                                    Int32 index = get_arg();
+                                    // Check if we have a valid local index
+                                    ASSERT_ERR(index > this.locals.Length-1, CoreErrorType.INVALID_LOCAL, "Local index is larger than locals size!");
+                                    push_exec(this.locals[index]);
                                     goto_next();
                                     break;
                                 }
@@ -199,41 +224,20 @@ namespace wavynet.vm.core
                             }
                             case Opcode.INVOKE_FUNC:
                                 {
-                                    /* WARNING
-                                    * This will have undefined side effects on multi-core mode, the reason being, we release the
-                                    * function id before it is called. This means during execution, the function may change...
-                                     */
-                                    Int32 id = get_arg();
-                                    // Currently, this does not work with methods, only functions
-                                    WavyFunction func = (WavyFunction)request_bank_item(data.Bank.Type.MBank, id);
-                                    // Check for the number of required arguments, and get them from the stack
-                                    WavyItem[] args = new WavyItem[func.args_size];
-                                    for (int i = 0; i < func.args_size; i++)
-                                        args[i] = pop_exec();
-                                    release_bank_item(data.Bank.Type.MBank, id);
+                                    WavyFunction func = expect_wfunc(pop_exec());
                                     if(TRACE_DEBUG)
                                     {
-                                        func_call_trace(func, args);
+                                        func_call_trace(func);
                                     }
                                     else
                                     {
-                                        func_call(func, args);
+                                        func_call(func);
                                     }
                                     break;
                                 }
                             case Opcode.RETURN:
                                 {
-                                    // First get the return value, by poping it from the exec stack
-                                    WavyItem return_value = this.exec_stack.pop();
-                                    // Then restore the state of the core
-                                    FuncFrame previous_frame = this.func_stack.pop();
-                                    this.pc = previous_frame.pc;
-                                    this.locals = previous_frame.locals;
-                                    this.exec_stack = previous_frame.exec_stack;
-                                    this.bytecode = previous_frame.bytecode;
-                                    // Then push the returned value to the exec stack
-                                    this.exec_stack.push(return_value);
-                                    // Resume execution
+                                    func_return();
                                     goto_next();
                                     break;
                                 }
@@ -296,6 +300,12 @@ namespace wavynet.vm.core
                                     }
                                     this.pc += arg; break;
                                 }
+                            case Opcode.PSH_NULL:
+                                {
+                                    push_exec(new WavyItem(null, ItemType.NULL));
+                                    goto_next();
+                                    break;
+                                }
                             default:
                                 {
                                     // We have an invalid opcode
@@ -348,14 +358,14 @@ namespace wavynet.vm.core
         // We expect a WavyItem to be a WavyFunction
         private dynamic expect_wfunc(WavyItem item)
         {
-            ASSERT_ERR(!(item.type != ItemType.FUNC), CoreErrorType.UNEXPECTED_TYPE, "Expected WavyFunction, but got: " + item.type);
+            ASSERT_ERR(item.type != ItemType.FUNC, CoreErrorType.UNEXPECTED_TYPE, "Expected WavyFunction, but got: " + item.type);
             return item;
         }
 
         // We expect a WavyItem to be a WavyObject
         private dynamic expect_wobject(WavyItem item)
         {
-            ASSERT_ERR(!(item.type != ItemType.OBJECT), CoreErrorType.UNEXPECTED_TYPE, "Expected WavyObject, but got: " + item.type);
+            ASSERT_ERR(item.type != ItemType.OBJECT, CoreErrorType.UNEXPECTED_TYPE, "Expected WavyObject, but got: " + item.type);
             return item;
         }
 
@@ -385,40 +395,54 @@ namespace wavynet.vm.core
         }
 
         // Perform a function call with a trace
-        private Trace func_call_trace(WavyFunction func, WavyItem[] args)
+        private Trace func_call_trace(WavyFunction func)
         {
             // Then create a new Trace instance referencing that frame
-            Trace trace = new Trace(func_call(func, args));
+            Trace trace = new Trace(func_call(func));
             // Push the trace to the traceback
             this.traceback.push_call_trace(trace);
             return trace;
         }
 
         // Perform a function call
-        private FuncFrame func_call(WavyFunction func, WavyItem[] args)
+        private FuncFrame func_call(WavyFunction func)
         {
+            // Set the size of the locals to the args count & locals count
+            this.locals = new WavyItem[func.args_size + func.locals_size];
+            // Then define the function arguments passed in that were on the exec stack
+            for (int i = 0; i < func.args_size; i++)
+                this.locals[i] = exec_stack.pop();
             // Check if the function is native
-            if(func.is_native)
+            if (func.is_native)
             {
-                this.native_interface.call_native_func(VM.state.current_file, func.name, args);
+                this.native_interface.call_native_func(VM.state.current_file, func.name, this.locals);
                 return new FuncFrame();
             }
             else
             {
                 // First create a new FuncFrame to push to the function stack
-                FuncFrame frame = new FuncFrame(this, func.name, this.pc, (WavyItem[])this.locals.Clone(), ExecStack.deep_copy(this, this.exec_stack), (int[])this.bytecode.Clone());
+                FuncFrame frame = new FuncFrame(this, func.name, this.pc, this.locals, this.exec_stack, this.bytecode);
                 // Then push the frame to the FuncStack
                 this.func_stack.push(frame);
-                // Set the size of the locals to the args count & locals count
-                this.locals = new WavyItem[func.args_size+func.locals_size];
-                // Then define the function arguments passed in that were on the exec stack
-                for (int i = 0; i < func.args_size; i++)
-                    this.locals[i] = exec_stack.pop();
                 this.pc = 0;
                 this.exec_stack = new ExecStack(this);
                 this.bytecode = func.bytecode;
                 return frame;
             }
+        }
+
+        private void func_return()
+        {
+            // First get the return value, by poping it from the exec stack
+            WavyItem return_value = this.exec_stack.pop();
+            // Then restore the state of the core
+            FuncFrame previous_frame = this.func_stack.pop();
+            this.pc = previous_frame.pc;
+            this.locals = previous_frame.locals;
+            this.exec_stack = previous_frame.exec_stack;
+            this.bytecode = previous_frame.bytecode;
+            // Then push the returned value to the exec stack
+            this.exec_stack.push(return_value);
         }
 
         // Check if we have reached the end

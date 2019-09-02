@@ -25,19 +25,19 @@ namespace wavynet.vm.core
         BIN_REM = 0xB,
 
         LD_LIT = 0xC,           // Load a literal from the LBank to the stack
-        LD_VAR,           // Load a var from the MBank to the stack
-        LD_LOC,           // Load a local variable to the stack
+        LD_VAR = 0xD,           // Load a var from the MBank to the stack
+        LD_LOC = 0xE,           // Load a local variable to the stack
 
-        BANK_VAR,         // Define a variable to the bank
-        BANK_ASSIGN,      // Assign a value to a variable in the bank
-        LOCAL_ASSIGN,     // Store a value to a local variable index
+        BANK_VAR = 0xF,         // Define a variable to the bank
+        BANK_ASSIGN = 0x10,      // Assign a value to a variable in the bank
+        LOCAL_ASSIGN = 0x11,     // Store a value to a local variable index
 
-        MAKE_CLASS,       // Takes a class specification from the lbank, and generates a WavyClass which gets loaded to the MBank
-        MAKE_FUNC,        // Takes a function specification from the lbank, and generates a WavyFunction which gets loaded to the MBank
+        MAKE_CLASS = 0x12,       // Takes a class specification from the lbank, and generates a WavyClass which gets loaded to the MBank
+        MAKE_FUNC = 0x13,        // Takes a function specification from the lbank, and generates a WavyFunction which gets loaded to the MBank
 
-        NEW,              // Create a new WavyObject instance and push to the stack
-        INVOKE_FUNC,      // Invoke a function or method
-        RETURN,           // Return from a function (always returns a value)
+        NEW = 0x14,              // Create a new WavyObject instance and push to the stack
+        INVOKE_FUNC = 0x15,      // Invoke a function or method
+        RETURN = 0x16,           // Return from a function (always returns a value)
 
         GOTO,             // Goto a given offset instruction
         IF_ZERO,          // If the val on the stack is zero, branch to the offset instruction
@@ -46,5 +46,7 @@ namespace wavynet.vm.core
         IF_GRTE,          // If the val1 (top) on the stack is greater or equal than val2, branch to the offset instruction
         IF_LT,            // If the val1 (top) on the stack is less than val2, branch to the offset instruction
         IF_LTE,           // If the val1 (top) on the stack is less or equal than val2, branch to the offset instruction
+
+        PSH_NULL,       // Push null onto the stack
     }
 }

@@ -14,16 +14,12 @@ namespace wavynet.vm.data.items
         public bool is_native;
         public string dll_name;
 
-        public WavyFunction(string name) : base(null, ItemType.FUNC)
+        public WavyFunction(string name, int args_size, int locals_size, Int32[] bytecode) : base(null, ItemType.FUNC)
         {
             this.name = name;
-            this.args_size = 0;
-            this.locals_size = 0;
-        }
-
-        public static WavyItem make_func()
-        {
-            return new WavyItem(new WavyFunction("test"), ItemType.FUNC);
+            this.args_size = args_size;
+            this.locals_size = locals_size;
+            this.bytecode = bytecode;
         }
 
         public WavyItem call(List<WavyItem> args)
