@@ -22,7 +22,7 @@ namespace wavynet.vm
         public WCProfile wc_profile;
 
         // Should the vm emulate multi threading using multiple cores
-        public static bool MULTI_CORE = false;
+        public static bool MULTI_CORE = true;
         // Should we cache the value retrieved from the bank for use in multiple cores
         public static bool MULTI_CORE_BANK_CACHING = true;
 
@@ -62,6 +62,23 @@ namespace wavynet.vm
             base.run();
             try
             {
+                this.bank_manager.m_bank.add(0, new data.items.WavyFunction("test_func", 0, 0, new Int32[] {
+                (Int32)Opcode.LD_VAR, 1,
+                (Int32)Opcode.PRINT,
+                (Int32)Opcode.DECREMENT,
+                (Int32)Opcode.BANK_VAR, 1,
+                (Int32)Opcode.PSH_ZERO,
+                (Int32)Opcode.LD_VAR, 1,
+                (Int32)Opcode.IF_GRT, 9,
+                (Int32)Opcode.LD_VAR, 0,
+                (Int32)Opcode.INVOKE_FUNC,
+                (Int32)Opcode.PSH_NULL,
+                (Int32)Opcode.RETURN,
+            }));
+                this.bank_manager.m_lock.Add(0, new data.ItemLock());
+                this.bank_manager.m_bank.add(1, new WavyItem(100, ItemType.INT));
+                this.bank_manager.m_lock.Add(1, new data.ItemLock());
+
                 // Create and run the main core
                 this.core_manager.new_core_event += this.core_manager.create_and_run;
                 this.core_manager.new_core_event?.Invoke(this, new CoreCreateEventArgs(-1, this.wc_profile.bytecode));

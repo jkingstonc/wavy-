@@ -47,6 +47,11 @@ namespace wavynet.vm.core
         IF_LT,            // If the val1 (top) on the stack is less than val2, branch to the offset instruction
         IF_LTE,           // If the val1 (top) on the stack is less or equal than val2, branch to the offset instruction
 
+
+        INCREMENT,          // Increments in place
+        DECREMENT,          // Decrements in place
+
+        PSH_ZERO,       // Push zero onto the stack
         PSH_NULL,       // Push null onto the stack
     }
 }

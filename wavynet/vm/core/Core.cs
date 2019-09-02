@@ -32,6 +32,8 @@ namespace wavynet.vm.core
 
         // The max Program Counter, this determines program length
         public const int MAX_PC = 65536; // 2^16
+        // Maximum ammount of allowed recursion
+        public const int MAX_RECURSION = 100;
 
         private System.Diagnostics.Stopwatch watch;
 
@@ -65,6 +67,12 @@ namespace wavynet.vm.core
             this.thread = new Thread(() => {
                 this.evaluate_sequence();
                 });
+
+            this.bytecode = new Int32[] {
+                (Int32)Opcode.LD_VAR, 0,
+                (Int32)Opcode.INVOKE_FUNC,
+            };
+            this.state.opcode_count = this.bytecode.Length;
         }
 
         public override void start()
@@ -122,7 +130,10 @@ namespace wavynet.vm.core
                             case Opcode.PRINT:
                                 {
                                     Console.ForegroundColor = ConsoleColor.Green;
-                                    Console.WriteLine(pop_exec().value);
+                                    if(VM.MULTI_CORE)
+                                        Console.WriteLine("{core "+this.state.id+"} "+peek_exec().value);
+                                    else
+                                        Console.WriteLine(peek_exec().value);
                                     goto_next();
                                     break;
                                 }
@@ -279,6 +290,30 @@ namespace wavynet.vm.core
                                     }
                                     this.pc += arg; break;
                                 }
+                            case Opcode.INCREMENT:
+                                {
+                                    WavyItem item = peek_exec();
+                                    var num = expect_numeric(item);
+                                    num++;
+                                    item.value = num;
+                                    goto_next();
+                                    break;
+                                }
+                            case Opcode.DECREMENT:
+                                {
+                                    WavyItem item = peek_exec();
+                                    var num = expect_numeric(item);
+                                    num--;
+                                    item.value = num;
+                                    goto_next();
+                                    break;
+                                }
+                            case Opcode.PSH_ZERO:
+                                {
+                                    push_exec(new WavyItem(0, ItemType.INT));
+                                    goto_next();
+                                    break;
+                                }
                             case Opcode.PSH_NULL:
                                 {
                                     push_exec(new WavyItem(null, ItemType.NULL));
@@ -386,6 +421,8 @@ namespace wavynet.vm.core
         // Perform a function call
         private FuncFrame func_call(WavyFunction func)
         {
+            ASSERT_ERR(this.state.func_depth > MAX_RECURSION, CoreErrorType.MAX_RECURSION, "Maxmimum recursion depth achieved!");
+            this.state.func_depth++;
             // Set the size of the locals to the args count & locals count
             this.locals = new WavyItem[func.args_size + func.locals_size];
             // Then define the function arguments passed in that were on the exec stack
@@ -413,6 +450,7 @@ namespace wavynet.vm.core
 
         private void func_return()
         {
+            this.state.func_depth--;
             // First get the return value, by poping it from the exec stack
             WavyItem return_value = this.exec_stack.pop();
             // Then restore the state of the core

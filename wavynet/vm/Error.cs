@@ -132,6 +132,7 @@ namespace wavynet.vm
         INVALID_MULTICORE_STATE,    // When a multicore operation fails due to an invalid multicore state
         UNEXPECTED_TYPE,            // When the core expects a WavyItem to have a certian type
         INVALID_LOCAL,
+        MAX_RECURSION,
     }
 
     public enum VMErrorType
