@@ -52,7 +52,7 @@ namespace wavynet.vm.core
 
         public void display()
         {
-            Console.WriteLine(this.frame.get_func_name());
+            Console.WriteLine(this.frame.func_name);
         }
 
         public FuncFrame get_frame()

@@ -219,6 +219,21 @@ namespace wavynet.vm.core
                                     {
                                         func_call(func, args);
                                     }
+                                    break;
+                                }
+                            case Opcode.RETURN:
+                                {
+                                    // First get the return value, by poping it from the exec stack
+                                    WavyItem return_value = this.exec_stack.pop();
+                                    // Then restore the state of the core
+                                    FuncFrame previous_frame = this.func_stack.pop();
+                                    this.pc = previous_frame.pc;
+                                    this.locals = previous_frame.locals;
+                                    this.exec_stack = previous_frame.exec_stack;
+                                    this.bytecode = previous_frame.bytecode;
+                                    // Then push the returned value to the exec stack
+                                    this.exec_stack.push(return_value);
+                                    // Resume execution
                                     goto_next();
                                     break;
                                 }
@@ -386,15 +401,22 @@ namespace wavynet.vm.core
             if(func.is_native)
             {
                 this.native_interface.call_native_func(VM.state.current_file, func.name, args);
-                return null;
+                return new FuncFrame();
             }
             else
             {
                 // First create a new FuncFrame to push to the function stack
-                FuncFrame frame = new FuncFrame(this, func.name, ExecStack.deep_copy(this, this.exec_stack));
+                FuncFrame frame = new FuncFrame(this, func.name, this.pc, (WavyItem[])this.locals.Clone(), ExecStack.deep_copy(this, this.exec_stack), (int[])this.bytecode.Clone());
                 // Then push the frame to the FuncStack
                 this.func_stack.push(frame);
-                this.locals = new WavyItem[func.locals_size];
+                // Set the size of the locals to the args count & locals count
+                this.locals = new WavyItem[func.args_size+func.locals_size];
+                // Then define the function arguments passed in that were on the exec stack
+                for (int i = 0; i < func.args_size; i++)
+                    this.locals[i] = exec_stack.pop();
+                this.pc = 0;
+                this.exec_stack = new ExecStack(this);
+                this.bytecode = func.bytecode;
                 return frame;
             }
         }

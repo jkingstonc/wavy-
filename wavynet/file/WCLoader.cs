@@ -72,16 +72,20 @@ namespace wavynet.file
             if (lines[current++] == "lbank")
             {
                 List<WavyItem> items = new List<WavyItem>();
-                string item_type;
                 while (lines[current] != "end")
                 {
                     string type = lines[current++];
                     if(type == "wfunc")
                     {
-
-                    }else if(type == "wclass")
+                        do {
+                            // Generate a WavyFunction here
+                        } while (lines[current++] != "end");
+                    }
+                    else if(type == "wclass")
                     {
-
+                        do {
+                            // Generate a WavyClass here
+                        } while (lines[current++] != "end");
                     }
                     else
                     {

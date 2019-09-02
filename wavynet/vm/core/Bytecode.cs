@@ -32,11 +32,12 @@ namespace wavynet.vm.core
         BANK_ASSIGN,      // Assign a value to a variable in the bank
         LOCAL_ASSIGN,     // Store a value to a local variable index
 
-        MAKE_CLASS,       // Takes a class specification, and generates a WavyClass which gets loaded to the MBank
-        MAKE_FUNC,        // Takes a function specification, and generates a WavyFunction which gets loaded to the MBank
+        MAKE_CLASS,       // Takes a class specification from the lbank, and generates a WavyClass which gets loaded to the MBank
+        MAKE_FUNC,        // Takes a function specification from the lbank, and generates a WavyFunction which gets loaded to the MBank
 
         NEW,              // Create a new WavyObject instance and push to the stack
         INVOKE_FUNC,      // Invoke a function or method
+        RETURN,           // Return from a function (always returns a value)
 
         GOTO,             // Goto a given offset instruction
         IF_ZERO,          // If the val on the stack is zero, branch to the offset instruction

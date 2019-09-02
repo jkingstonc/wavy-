@@ -3,6 +3,7 @@
  * 22/08/19
  */
 
+using System;
 using System.Collections.Generic;
 using wavynet.vm.core;
 
@@ -111,25 +112,21 @@ namespace wavynet.vm
     }
 
     // Frame that sits on the FuncStack
-    public class FuncFrame
+    public struct FuncFrame
     {
-        private string func_name;
-        private ExecStack exec_stack;
+        public string func_name;
+        public int pc;
+        public WavyItem[] locals;
+        public ExecStack exec_stack;
+        public Int32[] bytecode;
 
-        public FuncFrame(Core core, string func_name, ExecStack exec_stack)
+        public FuncFrame(Core core, string func_name, int pc, WavyItem[] locals, ExecStack exec_stack, Int32[] bytecode)
         {
             this.func_name = func_name;
+            this.pc = pc;
+            this.locals = locals;
             this.exec_stack = exec_stack;
-        }
-
-        public string get_func_name()
-        {
-            return this.func_name;
-        }
-
-        public ExecStack get_stack()
-        {
-            return this.exec_stack;
+            this.bytecode = bytecode;
         }
     }
 
