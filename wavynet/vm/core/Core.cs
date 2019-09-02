@@ -65,27 +65,6 @@ namespace wavynet.vm.core
             this.thread = new Thread(() => {
                 this.evaluate_sequence();
                 });
-
-            this.bytecode = new Int32[]
-            {
-                (Int32)Opcode.LD_LIT, 0, // Load 123
-                (Int32)Opcode.LD_LIT, 1, // Load 456
-                (Int32)Opcode.LD_VAR, 0, // Load func
-                (Int32)Opcode.INVOKE_FUNC,
-                (Int32)Opcode.PRINT,
-                (Int32)Opcode.END,
-            };
-            this.state.opcode_count = this.bytecode.Length;
-
-            this.vm.bank_manager.m_bank.add(0, new WavyFunction("test_func_1", 2, 0, new Int32[]
-            {
-                (Int32)Opcode.LD_LOC, 0,
-                (Int32)Opcode.PRINT,
-                (Int32)Opcode.LD_LOC, 1,
-                (Int32)Opcode.PRINT,
-                (Int32)Opcode.PSH_NULL,
-                (Int32)Opcode.RETURN,
-            }));
         }
 
         public override void start()
@@ -427,6 +406,7 @@ namespace wavynet.vm.core
                 this.pc = 0;
                 this.exec_stack = new ExecStack(this);
                 this.bytecode = func.bytecode;
+                this.state.opcode_count = this.bytecode.Length;
                 return frame;
             }
         }
@@ -441,6 +421,7 @@ namespace wavynet.vm.core
             this.locals = previous_frame.locals;
             this.exec_stack = previous_frame.exec_stack;
             this.bytecode = previous_frame.bytecode;
+            this.state.opcode_count = this.bytecode.Length;
             // Then push the returned value to the exec stack
             this.exec_stack.push(return_value);
         }
