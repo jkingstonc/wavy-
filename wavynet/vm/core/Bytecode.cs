@@ -24,7 +24,7 @@ namespace wavynet.vm.core
         BIN_MOD = 0xA,
         BIN_REM = 0xB,
 
-        LD_LIT = 0xC,           // Load a literal from the LBank to the stack
+        LD_CONST = 0xC,         // Load a constant from the CBank to the stack
         LD_VAR = 0xD,           // Load a var from the MBank to the stack
         LD_LOC = 0xE,           // Load a local variable to the stack
 

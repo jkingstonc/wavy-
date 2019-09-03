@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 namespace wavynet.vm.data.items
 {
+    [Serializable]
     public class WavyFunction : WavyItem
     {
         public string name;
@@ -12,7 +13,6 @@ namespace wavynet.vm.data.items
 
         // Used for native functions, if native, we need to be able to resolve the dll file
         public bool is_native;
-        public string dll_name;
 
         public WavyFunction(string name, int args_size, int locals_size, Int32[] bytecode) : base(null, ItemType.FUNC)
         {
@@ -20,6 +20,11 @@ namespace wavynet.vm.data.items
             this.args_size = args_size;
             this.locals_size = locals_size;
             this.bytecode = bytecode;
+        }
+
+        public WavyFunction()
+        {
+
         }
 
         public WavyItem call(List<WavyItem> args)

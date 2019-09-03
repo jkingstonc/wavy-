@@ -52,7 +52,7 @@ namespace wavynet.vm.data
         public enum Type
         {
             MBank,
-            LBank,
+            CBank,
         }
     }
 }

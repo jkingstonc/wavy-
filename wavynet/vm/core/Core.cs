@@ -47,7 +47,7 @@ namespace wavynet.vm.core
         {
             this.vm = vm;
             this.native_interface = new NativeInterface(this.vm, this);
-            this.state = CoreState.setup(id);
+            this.state = new CoreState(id, new CoreErrorHandler(), 0, false, 0);
             this.pc = 0;
             this.locals = new WavyItem[0];
             this.traceback = new TraceBack();
@@ -67,12 +67,6 @@ namespace wavynet.vm.core
             this.thread = new Thread(() => {
                 this.evaluate_sequence();
                 });
-
-            this.bytecode = new Int32[] {
-                (Int32)Opcode.LD_VAR, 0,
-                (Int32)Opcode.INVOKE_FUNC,
-            };
-            this.state.opcode_count = this.bytecode.Length;
         }
 
         public override void start()
@@ -154,11 +148,11 @@ namespace wavynet.vm.core
                                     goto_next();
                                     break;
                                 }
-                            case Opcode.LD_LIT:
+                            case Opcode.LD_CONST:
                                 {
                                     Int32 id = get_arg();
-                                    push_exec(request_bank_item(data.Bank.Type.LBank, id));
-                                    release_bank_item(data.Bank.Type.LBank, id);
+                                    push_exec(request_bank_item(data.Bank.Type.CBank, id));
+                                    release_bank_item(data.Bank.Type.CBank, id);
                                     goto_next();
                                     break;
                                 }
@@ -531,7 +525,7 @@ namespace wavynet.vm.core
     }
 
     // Represents a state of the core at a particular time
-    public class CoreState
+    public struct CoreState
     {
         public int id;
         public MultiCoreState multi_core_state;
@@ -550,12 +544,6 @@ namespace wavynet.vm.core
             this.currently_interpreting = currently_interpreting;
             this.func_depth = func_depth;
             this.had_err = false;
-        }
-
-        // Create a fresh CoreState instance
-        public static CoreState setup(int id)
-        {
-            return new CoreState(id, new CoreErrorHandler(), 0, false, 0);
         }
     }
 }

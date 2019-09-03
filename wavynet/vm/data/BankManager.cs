@@ -3,7 +3,6 @@
  * 22/08/19
  */
 using System.Collections.Generic;
-using wavynet.profile;
 using wavynet.vm.core;
 
 namespace wavynet.vm.data
@@ -12,27 +11,27 @@ namespace wavynet.vm.data
     public class BankManager : VMComponent
     {
         // The data banks this vm uses
-        public Bank m_bank, l_bank;
+        public Bank m_bank, c_bank;
         // The item locks that this vm uses
-        public Dictionary<int, ItemLock> m_lock, l_lock = null;
+        public Dictionary<int, ItemLock> m_lock, c_lock = null;
 
         public BankManager() : base("BankManger")
         {
         }
 
-        public void setup(WavyItem[] lbank)
+        public void setup(WavyItem[] cbank)
         {
             base.setup();
             this.m_bank = new Bank(Bank.Type.MBank);
-            this.l_bank = new Bank(Bank.Type.LBank);
+            this.c_bank = new Bank(Bank.Type.CBank);
 
             if (VM.MULTI_CORE)
             {
                 m_lock = new Dictionary<int, ItemLock>();
-                l_lock = new Dictionary<int, ItemLock>();
+                c_lock = new Dictionary<int, ItemLock>();
             }
 
-            bind_lbank_data(lbank);
+            bind_lbank_data(cbank);
         }
 
         // Bind all the lbank data
@@ -42,10 +41,10 @@ namespace wavynet.vm.data
             // Loop over each value in the bank profile (M & L) & bind the data to our banks
             for (int i = 0; i < lbank.Length; i++)
             {
-                this.l_bank.add(i, lbank[i]);
+                this.c_bank.add(i, lbank[i]);
                 if (VM.MULTI_CORE)
                 {
-                    l_lock.Add(i, new ItemLock());
+                    c_lock.Add(i, new ItemLock());
                 }
             }
         }
@@ -106,8 +105,8 @@ namespace wavynet.vm.data
         {
             if (bank_type == Bank.Type.MBank)
                 return this.m_bank;
-            else if (bank_type == Bank.Type.LBank)
-                return this.l_bank;
+            else if (bank_type == Bank.Type.CBank)
+                return this.c_bank;
             return null;
         }
 
@@ -116,8 +115,8 @@ namespace wavynet.vm.data
         {
             if (bank_type == Bank.Type.MBank)
                 return this.m_lock;
-            else if (bank_type == Bank.Type.LBank)
-                return this.l_lock;
+            else if (bank_type == Bank.Type.CBank)
+                return this.c_lock;
             return null;
         }
     }
