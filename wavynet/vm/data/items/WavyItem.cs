@@ -16,6 +16,11 @@ namespace wavynet.vm
         public object value;
         public ItemType type;
 
+        public WavyItem(ItemType type)
+        {
+            this.type = type;
+        }
+
         public WavyItem(object value, ItemType type)
         {
             this.value = value;

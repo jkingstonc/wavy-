@@ -10,28 +10,30 @@ namespace wavynet.vm.data
     // BankManager controls muli-core access to Bank data
     public class BankManager : VMComponent
     {
+        // The original loaded cbank
+        WavyItem[] loaded_cbank;
         // The data banks this vm uses
         public Bank m_bank, c_bank;
         // The item locks that this vm uses
         public Dictionary<int, ItemLock> m_lock, c_lock = null;
 
-        public BankManager() : base("BankManger")
+        public BankManager(WavyItem[] loaded_cbank) : base("BankManger")
         {
+            this.loaded_cbank = loaded_cbank;
         }
 
-        public void setup(WavyItem[] cbank)
+        public override void setup()
         {
             base.setup();
             this.m_bank = new Bank(Bank.Type.MBank);
             this.c_bank = new Bank(Bank.Type.CBank);
-
             if (VM.MULTI_CORE)
             {
                 m_lock = new Dictionary<int, ItemLock>();
                 c_lock = new Dictionary<int, ItemLock>();
             }
 
-            bind_lbank_data(cbank);
+            bind_lbank_data(this.loaded_cbank);
         }
 
         // Bind all the lbank data
@@ -55,7 +57,7 @@ namespace wavynet.vm.data
         {
             Bank bank = get_bank_type(bank_type);
 
-            core.ASSERT_ERR(!bank.contains(id), CoreErrorType.INVALID_BANK_ID, "Bank item doesn't exist: "+id);
+            core.ASSERT_ERR(!bank.contains(id), CoreErrorType.INVALID_BANK_ID, "Bank item doesn't exist: " + id);
 
             // Dealing with multi threading
             if (VM.MULTI_CORE)
@@ -123,9 +125,14 @@ namespace wavynet.vm.data
 
     public class ItemLock
     {
-        private bool locked = false;
+        private bool locked;
         // The core that is using this lock
         private int core_id = -1;
+
+        public ItemLock()
+        {
+            this.locked = false;
+        }
 
         // When a core wants access to the item
         public bool request_use(int core_id)

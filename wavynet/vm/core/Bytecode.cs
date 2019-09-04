@@ -3,6 +3,8 @@
  * 22/08/19
  */
 
+using System;
+
 namespace wavynet.vm.core
 {
     public enum Opcode

@@ -22,7 +22,7 @@ namespace wavynet.vm
         public WC wc_profile;
 
         // Should the vm emulate multi threading using multiple cores
-        public static bool MULTI_CORE = true;
+        public static bool MULTI_CORE = false;
         // Should we cache the value retrieved from the bank for use in multiple cores
         public static bool MULTI_CORE_BANK_CACHING = true;
 
@@ -40,11 +40,10 @@ namespace wavynet.vm
             LOG("setting up '" + this.wc_profile.filename+"'");
             VM.state = VMState.setup(this.wc_profile.filename);
             this.core_manager = new CoreManager(this);
-            this.bank_manager = new BankManager();
+            this.bank_manager = new BankManager(this.wc_profile.cbank.ToArray());
             this.link_manager = new LinkManager();
-
             this.core_manager.setup();
-            this.bank_manager.setup(wc_profile.cbank.ToArray());
+            this.bank_manager.setup();
             this.link_manager.setup();
         }
 

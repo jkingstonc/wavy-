@@ -65,7 +65,7 @@ namespace wavynet.vm
 
         }
 
-        public virtual void setup(Int32[] sequence)
+        public override void setup()
         {
             base.setup();
         }

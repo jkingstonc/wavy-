@@ -56,7 +56,7 @@ namespace wavynet.vm.core
         }
 
         // Setup the core thread
-        public override void setup(Int32[] sequence)
+        public void setup(Int32[] sequence)
         {
             base.setup();
             this.bytecode = sequence;
@@ -113,7 +113,7 @@ namespace wavynet.vm.core
                     Int32 op = get_next();
 
                     if (INSTR_DEBUG)
-                        Console.WriteLine("op: " + op);
+                        Console.WriteLine("op: " + (Opcode)op);
 
                     // Surround the execute phase in a try catch, this is so the vm can return safely to the error handling
                     // without breaking other vm components
@@ -128,6 +128,7 @@ namespace wavynet.vm.core
                                         Console.WriteLine("{core "+this.state.id+"} "+peek_exec().value);
                                     else
                                         Console.WriteLine(peek_exec().value);
+                                    Console.ForegroundColor = ConsoleColor.Yellow;
                                     goto_next();
                                     break;
                                 }
@@ -310,7 +311,7 @@ namespace wavynet.vm.core
                                 }
                             case Opcode.PSH_NULL:
                                 {
-                                    push_exec(new WavyItem(null, ItemType.NULL));
+                                    push_exec(new WavyItem(ItemType.NULL));
                                     goto_next();
                                     break;
                                 }
@@ -473,14 +474,14 @@ namespace wavynet.vm.core
         // Returns the next bytecode instance
         public Int32 get_next()
         {
-            return bytecode[pc];
+            return (Int32)bytecode[pc];
         }
 
         // Get the next argument
         public Int32 get_arg()
         {
             goto_next();
-            return get_next();
+            return (Int32)bytecode[pc];
         }
 
         // Pop from the current execution stack in use
