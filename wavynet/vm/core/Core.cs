@@ -152,16 +152,16 @@ namespace wavynet.vm.core
                             case Opcode.LD_CONST:
                                 {
                                     Int32 id = get_arg();
-                                    push_exec(request_bank_item(data.Bank.Type.CBank, id));
-                                    release_bank_item(data.Bank.Type.CBank, id);
+                                    push_exec(this.vm.bank_manager.request_c_item(this, id));
+                                    this.vm.bank_manager.release_c_item(this, id);
                                     goto_next();
                                     break;
                                 }
                             case Opcode.LD_VAR:
                                 {
                                     Int32 id = get_arg();
-                                    push_exec(request_bank_item(data.Bank.Type.MBank, id));
-                                    release_bank_item(data.Bank.Type.MBank, id);
+                                    push_exec(this.vm.bank_manager.request_m_item(this, id));
+                                    this.vm.bank_manager.release_m_item(this, id);
                                     goto_next();
                                     break;
                                 }
@@ -179,9 +179,9 @@ namespace wavynet.vm.core
                             case Opcode.BANK_VAR:
                                 {
                                     Int32 id = get_arg();
-                                    request_bank_item(data.Bank.Type.MBank, id);
-                                    assign_bank_item(id, pop_exec());
-                                    release_bank_item(data.Bank.Type.MBank, id);
+                                    this.vm.bank_manager.request_m_item(this, id);
+                                    this.vm.bank_manager.assign_item(this, id, pop_exec());
+                                    this.vm.bank_manager.request_m_item(this, id);
                                     goto_next();
                                     break;
                                 }
@@ -376,31 +376,6 @@ namespace wavynet.vm.core
         {
             ASSERT_ERR(item.type != ItemType.OBJECT, CoreErrorType.UNEXPECTED_TYPE, "Expected WavyObject, but got: " + item.type);
             return item;
-        }
-
-        // Request a WavyItem from the BankManager
-        private WavyItem request_bank_item(data.Bank.Type type, int id)
-        {
-            // First attempt to request the item from the bank manager
-            WavyItem item = this.vm.bank_manager.request_item(this, type, id);
-            while(this.state.multi_core_state == MultiCoreState.BLOCKED)
-            {
-                // This is a very bad implementation, but currently, we try again until we are not blocked
-                item = this.vm.bank_manager.request_item(this, type, id);
-            }
-            return item;
-        }
-
-        // Assign a bank item to the MBank
-        private void assign_bank_item(int id, WavyItem item)
-        {
-            this.vm.bank_manager.assign_item(this, id, item);
-        }
-
-        // Release a WavyItem from the BankManager
-        private void release_bank_item(data.Bank.Type type, int id)
-        {
-            this.vm.bank_manager.release_item(this, type, id);
         }
 
         // Perform a function call with a trace

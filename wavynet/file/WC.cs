@@ -25,17 +25,15 @@ namespace wavynet.file.wcformat
         public string magic;
         public string filename;
         public string datetime;
-        public bool requires_native;
         public Int32[] bytecode;
         public List<WavyItem> cbank;
 
-        public static WC gen_WC(string magic, string filename, string datetime, bool requires_native, Int32[] bytecode, List<WavyItem> cbank)
+        public static WC gen_WC(string magic, string filename, string datetime, Int32[] bytecode, List<WavyItem> cbank)
         {
             WC wc = new WC();
             wc.magic = magic;
             wc.filename = filename;
             wc.datetime = datetime;
-            wc.requires_native = requires_native;
             wc.bytecode = bytecode;
             wc.cbank = cbank;
             return wc;

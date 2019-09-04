@@ -51,18 +51,39 @@ namespace wavynet.vm.data
             }
         }
 
+        // Request an item from the cbank
+        public WavyItem request_c_item(Core core, int id)
+        {
+            return request_item(core, this.c_bank, this.c_lock, id);
+        }
+
+        // Request an item from the mbank
+        public WavyItem request_m_item(Core core, int id)
+        {
+            return request_item(core, this.m_bank, this.m_lock, id);
+        }
+
+        // Request an item from the cbank
+        public void release_c_item(Core core, int id)
+        {
+            release_item(core, this.c_bank, this.c_lock, id);
+        }
+
+        // Request an item from the mbank
+        public void release_m_item(Core core, int id)
+        {
+            release_item(core, this.m_bank, this.m_lock, id);
+        }
+
         // Used when an instruction wants to request access to a bank item
         // The request will only be granted if the item is available
-        public WavyItem request_item(Core core, Bank.Type bank_type, int id)
+        public WavyItem request_item(Core core, Bank bank, Dictionary<int, ItemLock> bank_lock, int id)
         {
-            Bank bank = get_bank_type(bank_type);
-
             core.ASSERT_ERR(!bank.contains(id), CoreErrorType.INVALID_BANK_ID, "Bank item doesn't exist: " + id);
 
             // Dealing with multi threading
             if (VM.MULTI_CORE)
             {
-                Dictionary<int, ItemLock> bank_lock = get_lock_type(bank_type);
                 // First request use of the item
                 if (bank_lock[id].request_use(core.state.id))
                 {
@@ -90,36 +111,13 @@ namespace wavynet.vm.data
         }
 
         // Called when the core is done with a bank item
-        public void release_item(Core core, Bank.Type bank_type, int id)
+        public void release_item(Core core, Bank bank, Dictionary<int, ItemLock> bank_lock, int id)
         {
             if(VM.MULTI_CORE)
             {
-                Bank bank = get_bank_type(bank_type);
-                Dictionary<int, ItemLock> bank_lock = get_lock_type(bank_type);
-
                 core.ASSERT_ERR(!bank.contains(id), CoreErrorType.INVALID_BANK_ID, "Bank item doesn't exist, so can't be released: " + id);
                 bank_lock[id].release_use();
             }
-        }
-
-        // Get the correct bank given the type
-        private Bank get_bank_type(Bank.Type bank_type)
-        {
-            if (bank_type == Bank.Type.MBank)
-                return this.m_bank;
-            else if (bank_type == Bank.Type.CBank)
-                return this.c_bank;
-            return null;
-        }
-
-        // Get the correct bank lock given the type
-        private Dictionary<int, ItemLock> get_lock_type(Bank.Type bank_type)
-        {
-            if (bank_type == Bank.Type.MBank)
-                return this.m_lock;
-            else if (bank_type == Bank.Type.CBank)
-                return this.c_lock;
-            return null;
         }
     }
 
