@@ -27,12 +27,10 @@ namespace wavynet.vm.data
             base.setup();
             this.m_bank = new Bank(Bank.Type.MBank);
             this.c_bank = new Bank(Bank.Type.CBank);
-            if (VM.MULTI_CORE)
-            {
-                m_lock = new Dictionary<int, ItemLock>();
-                c_lock = new Dictionary<int, ItemLock>();
-            }
-
+#if VM_MULTI_CORE
+            m_lock = new Dictionary<int, ItemLock>();
+            c_lock = new Dictionary<int, ItemLock>();
+#endif
             bind_lbank_data(this.loaded_cbank);
         }
 
@@ -44,10 +42,9 @@ namespace wavynet.vm.data
             for (int i = 0; i < lbank.Length; i++)
             {
                 this.c_bank.add(i, lbank[i]);
-                if (VM.MULTI_CORE)
-                {
-                    c_lock.Add(i, new ItemLock());
-                }
+#if VM_MULTI_CORE
+                c_lock.Add(i, new ItemLock());
+#endif
             }
         }
 
@@ -82,27 +79,26 @@ namespace wavynet.vm.data
             core.ASSERT_ERR(!bank.contains(id), CoreErrorType.INVALID_BANK_ID, "Bank item doesn't exist: " + id);
 
             // Dealing with multi threading
-            if (VM.MULTI_CORE)
+#if VM_MULTI_CORE
+            
+            // First request use of the item
+            if (bank_lock[id].request_use(core.state.id))
             {
-                // First request use of the item
-                if (bank_lock[id].request_use(core.state.id))
-                {
-                    core.state.multi_core_state = MultiCoreState.RUNNING;
-                    return bank.get_item(id);
-                }
-                // If we are denied the request, we are in a BLOCKED state
-                else
-                {
-                    core.state.multi_core_state = MultiCoreState.BLOCKED;
-                }
-            }
-            // Dealing with a single thread
-            else
-            {
-                // We don't need to check locks, as it impossible to encounter concurrent locks
+                core.state.multi_core_state = MultiCoreState.RUNNING;
                 return bank.get_item(id);
             }
-            return null;
+            // If we are denied the request, we are in a BLOCKED state
+            else
+            {
+                core.state.multi_core_state = MultiCoreState.BLOCKED;
+                return null
+            }
+            
+#else
+            // Dealing with a single thread
+            // We don't need to check locks, as it impossible to encounter concurrent locks
+            return bank.get_item(id);
+#endif
         }
 
         public void assign_item(Core core, int id, WItem item)
@@ -113,11 +109,10 @@ namespace wavynet.vm.data
         // Called when the core is done with a bank item
         public void release_item(Core core, Bank bank, Dictionary<int, ItemLock> bank_lock, int id)
         {
-            if(VM.MULTI_CORE)
-            {
-                core.ASSERT_ERR(!bank.contains(id), CoreErrorType.INVALID_BANK_ID, "Bank item doesn't exist, so can't be released: " + id);
-                bank_lock[id].release_use();
-            }
+#if VM_MULTI_CORE
+            core.ASSERT_ERR(!bank.contains(id), CoreErrorType.INVALID_BANK_ID, "Bank item doesn't exist, so can't be released: " + id);
+            bank_lock[id].release_use();
+#endif
         }
     }
 

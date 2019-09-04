@@ -3,7 +3,8 @@
 * 22/08/19
 */
 
-using System;
+#define VM_MULTI_CORE
+
 using System.Threading;
 using wavynet.file.wcformat;
 using wavynet.vm.core;
@@ -20,11 +21,6 @@ namespace wavynet.vm
         public BankManager bank_manager;
         public LinkManager link_manager;
         public WC wc_profile;
-
-        // Should the vm emulate multi threading using multiple cores
-        public static bool MULTI_CORE = true;
-        // Should we cache the value retrieved from the bank for use in multiple cores
-        public static bool MULTI_CORE_BANK_CACHING = true;
 
         public VM(WC wc_profile) : base("VM")
         {

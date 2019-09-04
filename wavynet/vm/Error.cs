@@ -31,8 +31,9 @@ namespace wavynet.vm
             Console.WriteLine("** CORE "+ ((CoreError)errs[count]).get_state().id+ " ERROR ["+ ((CoreError)errs[count]).get_type()+"]**");
             if (errs[count].get_msg() != null)
                 Console.WriteLine("'" + errs[count].get_msg() + "'");
-            if (Core.TRACE_DEBUG)
-                ((CoreError)errs[count]).get_traceback().display();
+#if CORE_TRACE_DEBUG
+            ((CoreError)errs[count]).get_traceback().display();
+#endif
         }
     }
 

@@ -3,6 +3,9 @@
  * 22/08/19
  */
 
+#define CORE_INSTR_DEBUG
+#define CORE_TRACE_DEBUG
+
 using System;
 using System.Threading;
 using wavynet.vm.data.items;
@@ -36,12 +39,6 @@ namespace wavynet.vm.core
         public const int MAX_RECURSION = 100;
 
         private System.Diagnostics.Stopwatch watch;
-
-        // FOR DEBUGGING
-        // Do we want to display the currently executing instruction
-        public static bool INSTR_DEBUG = false;
-        // Do we want function calls to generate a traceback
-        public static bool TRACE_DEBUG = true;
 
         public Core(VM vm, int id) : base("Core", id)
         {
@@ -112,8 +109,11 @@ namespace wavynet.vm.core
                 {
                     Int32 op = get_next();
 
-                    if (INSTR_DEBUG)
-                        Console.WriteLine("op: " + (Opcode)op);
+#if CORE_INSTR_DEBUG
+                    Console.ForegroundColor = ConsoleColor.Blue;
+                    Console.WriteLine("op: " + (Opcode)op);
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+#endif
 
                     // Surround the execute phase in a try catch, this is so the vm can return safely to the error handling
                     // without breaking other vm components
@@ -124,10 +124,11 @@ namespace wavynet.vm.core
                             case Opcode.PRINT:
                                 {
                                     Console.ForegroundColor = ConsoleColor.Green;
-                                    if(VM.MULTI_CORE)
-                                        Console.WriteLine("{core "+this.state.id+"} "+peek_exec());
-                                    else
+#if VM_MULTI_CORE
+                                    Console.WriteLine("{core "+this.state.id+"} "+peek_exec());
+#else
                                         Console.WriteLine(peek_exec());
+#endif
                                     Console.ForegroundColor = ConsoleColor.Yellow;
                                     goto_next();
                                     break;
@@ -210,14 +211,12 @@ namespace wavynet.vm.core
                             case Opcode.INVOKE_FUNC:
                                 {
                                     WFunction func = expect_wfunc(pop_exec());
-                                    if(TRACE_DEBUG)
-                                    {
-                                        func_call_trace(func);
-                                    }
-                                    else
-                                    {
-                                        func_call(func);
-                                    }
+#if CORE_TRACE_DEBUG
+                                    func_call_trace(func);
+#else
+
+                                    func_call(func);
+#endif
                                     break;
                                 }
                             case Opcode.RETURN:

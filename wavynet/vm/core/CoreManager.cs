@@ -61,7 +61,9 @@ namespace wavynet.vm.core
         // Add a new core to the pool
         public int add_core()
         {
-            ASSERT_ERR(!VM.MULTI_CORE && this.next_id > 0, VMErrorType.INVALID_CORE_COUNT, "Cannot have multiple cores in single core mode!");
+#if VM_MULTI_CORE
+            ASSERT_ERR(this.next_id > 0, VMErrorType.INVALID_CORE_COUNT, "Cannot have multiple cores in single core mode!");
+#endif
             int id = gen_id();
             this.core_pool.Add(id, new Core(this.vm, id));
             this.next_id++;
