@@ -42,6 +42,8 @@ namespace wavynet.vm
             this.core_manager = new CoreManager(this);
             this.bank_manager = new BankManager(this.wc_profile.cbank.ToArray());
             this.link_manager = new LinkManager();
+            if (this.wc_profile.require_dll)
+                this.link_manager.add_dll(this.wc_profile.filename, this.wc_profile.path);
             this.core_manager.setup();
             this.bank_manager.setup();
             this.link_manager.setup();

@@ -13,11 +13,14 @@ namespace wavynet.vm.native
      */
     public class LinkManager : VMComponent
     {
+        // Filename & path to native dlls
+        public Dictionary<string, string> dlls;
         // Store assemblies
         public Dictionary<string, Assembly> assemblies;
 
         public LinkManager() : base("LinkManager")
         {
+            this.dlls = new Dictionary<string, string>();
             this.assemblies = new Dictionary<string, Assembly>();
         }
 
@@ -25,6 +28,11 @@ namespace wavynet.vm.native
         {
             base.setup();
             bind_all_dll();
+        }
+
+        public void add_dll(string name, string path)
+        {
+            this.dlls.Add(name, path);
         }
 
         // Bind all dlls
@@ -38,15 +46,13 @@ namespace wavynet.vm.native
         // This gets every dll file within the "native/dll/" installation folder
         private Dictionary<string, string> get_all_dlls()
         {
-            return new Dictionary<string, string>() {
-                { "TestFile", @"F:\OneDrive - Lancaster University\programming\c#\DLLTest\bin\Debug\netstandard2.0\DLLTest.dll" },
-            };
+            return this.dlls;
         }
 
         // Bind the DLL for the native code that we want to use
         private void bind_dll(string name, string path)
         {
-            this.assemblies.Add(name, Assembly.LoadFile(path));
+            this.assemblies.Add(name, Assembly.LoadFile(path+name+".dll"));
         }   
     }
 }

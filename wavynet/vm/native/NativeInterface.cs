@@ -29,16 +29,27 @@ namespace wavynet.vm.native
         }
 
         // Call a native function, and pass in the NativeEnviroment in use
-        public object call_native_func(string current_file, string func, WavyItem[] args)
+        public WavyItem call_native_func(string current_file, string func, WavyItem[] args)
         {
             // Loop over each class definition (Type) and attempt to call the func
             // Note, we should explicitly check for the correct type
             foreach (Type type in this.link_manager.assemblies[current_file].GetExportedTypes())
             {
                 var c = Activator.CreateInstance(type);
-                return type.InvokeMember(func, BindingFlags.InvokeMethod, null, c, args);
+                object return_value = type.InvokeMember(func, BindingFlags.InvokeMethod, null, c, args);
+                // This should be optimized
+                if(return_value is null)
+                    return new WavyItem(ItemType.NULL);
+                else if (return_value is int)
+                    return new WavyItem((int)return_value, ItemType.INT);
+                else if (return_value is bool)
+                    return new WavyItem((bool)return_value, ItemType.BOOL);
+                else if (return_value is double || return_value is float)
+                    return new WavyItem((double)return_value, ItemType.DOUBLE);
+                else if (return_value is string)
+                    return new WavyItem((string)return_value, ItemType.STRING);
             }
-            return null;
+            return new WavyItem(ItemType.NULL);
         }
     }
 }

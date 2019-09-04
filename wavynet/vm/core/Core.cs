@@ -398,24 +398,27 @@ namespace wavynet.vm.core
             // Then define the function arguments passed in that were on the exec stack
             for (int i = 0; i < func.args_size; i++)
                 this.locals[i] = exec_stack.pop();
+            // First create a new FuncFrame to push to the function stack
+            FuncFrame frame = new FuncFrame(this, func.name, this.pc, this.locals, this.exec_stack, this.bytecode);
+            // Then push the frame to the FuncStack
+            this.func_stack.push(frame);
             // Check if the function is native
             if (func.is_native)
             {
-                this.native_interface.call_native_func(VM.state.current_file, func.name, this.locals);
-                return new FuncFrame();
+                // Natively call the func
+                push_exec(this.native_interface.call_native_func(VM.state.current_file, func.name, this.locals));
+                // Becuase native functions can't implement Opcode.RETURN, we need to manually return & advance
+                func_return();
+                goto_next();
             }
             else
             {
-                // First create a new FuncFrame to push to the function stack
-                FuncFrame frame = new FuncFrame(this, func.name, this.pc, this.locals, this.exec_stack, this.bytecode);
-                // Then push the frame to the FuncStack
-                this.func_stack.push(frame);
                 this.pc = 0;
                 this.exec_stack = new ExecStack(this);
                 this.bytecode = func.bytecode;
                 this.state.opcode_count = this.bytecode.Length;
-                return frame;
             }
+            return frame;
         }
 
         private void func_return()
