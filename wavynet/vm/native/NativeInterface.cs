@@ -5,7 +5,7 @@
 
 using System;
 using System.Reflection;
-using wavynet.file;
+using wavynet.vm.data.items;
 using wavynet.vm.core;
 
 namespace wavynet.vm.native
@@ -37,19 +37,8 @@ namespace wavynet.vm.native
             {
                 var c = Activator.CreateInstance(type);
                 object return_value = type.InvokeMember(func, BindingFlags.InvokeMethod, null, c, args);
-                // This should be optimized
-                if(return_value is null)
-                    return new WavyItem(ItemType.NULL);
-                else if (return_value is int)
-                    return new WavyItem((int)return_value, ItemType.INT);
-                else if (return_value is bool)
-                    return new WavyItem((bool)return_value, ItemType.BOOL);
-                else if (return_value is double || return_value is float)
-                    return new WavyItem((double)return_value, ItemType.DOUBLE);
-                else if (return_value is string)
-                    return new WavyItem((string)return_value, ItemType.STRING);
             }
-            return new WavyItem(ItemType.NULL);
+            return (Wnull)null;
         }
     }
 }

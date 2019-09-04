@@ -9,28 +9,16 @@ using wavynet.vm.data.items;
 
 namespace wavynet.vm
 {
-    [XmlInclude(typeof(WavyFunction))]
+    [XmlInclude(typeof(Wnull))]
+    [XmlInclude(typeof(Wbool))]
+    [XmlInclude(typeof(Wint))]
+    [XmlInclude(typeof(Wdouble))]
+    [XmlInclude(typeof(Wstring))]
+    [XmlInclude(typeof(WFunction))]
     [Serializable]
     public class WavyItem
     {
-        public object value;
-        public ItemType type;
-
-        public WavyItem(ItemType type)
-        {
-            this.type = type;
-        }
-
-        public WavyItem(object value, ItemType type)
-        {
-            this.value = value;
-            this.type = type;
-        }
-
-        public WavyItem()
-        {
-
-        }
+        public dynamic value;
     }
 
     public enum ItemType

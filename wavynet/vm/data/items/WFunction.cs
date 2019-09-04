@@ -5,7 +5,7 @@ using wavynet.vm.core;
 namespace wavynet.vm.data.items
 {
     [Serializable]
-    public class WavyFunction : WavyItem
+    public class WFunction : WavyItem
     {
         public string name;
         // Used for native functions, if native, we need to be able to resolve the dll file
@@ -14,7 +14,7 @@ namespace wavynet.vm.data.items
         public int locals_size;
         public Int32[] bytecode;
 
-        public WavyFunction(string name, bool is_native, int args_size, int locals_size, Int32[] bytecode) : base(ItemType.FUNC)
+        public WFunction(string name, bool is_native, int args_size, int locals_size, Int32[] bytecode)
         {
             this.name = name;
             this.is_native = is_native;
@@ -23,7 +23,7 @@ namespace wavynet.vm.data.items
             this.bytecode = bytecode;
         }
 
-        public WavyFunction()
+        public WFunction()
         {
 
         }

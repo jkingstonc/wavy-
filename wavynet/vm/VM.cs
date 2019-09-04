@@ -22,7 +22,7 @@ namespace wavynet.vm
         public WC wc_profile;
 
         // Should the vm emulate multi threading using multiple cores
-        public static bool MULTI_CORE = false;
+        public static bool MULTI_CORE = true;
         // Should we cache the value retrieved from the bank for use in multiple cores
         public static bool MULTI_CORE_BANK_CACHING = true;
 

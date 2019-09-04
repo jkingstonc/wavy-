@@ -10,7 +10,7 @@ namespace wavynet.vm.data.items
     [Serializable]
     public class WavyClass : WavyItem
     {
-        public WavyClass() : base(ItemType.CLASS)
+        public WavyClass()
         {
 
         }

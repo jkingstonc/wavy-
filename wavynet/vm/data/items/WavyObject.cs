@@ -2,7 +2,7 @@
 {
     class WavyObject : WavyItem
     {
-        public WavyObject() : base(ItemType.OBJECT)
+        public WavyObject()
         {
 
         }
