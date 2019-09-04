@@ -8,9 +8,9 @@ using System;
 namespace wavynet.vm.data.items
 {
     [Serializable]
-    public class WavyClass : WavyItem
+    public class WClass : WItem
     {
-        public WavyClass()
+        public WClass()
         {
 
         }

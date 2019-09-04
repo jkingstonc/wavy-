@@ -16,7 +16,7 @@ namespace wavynet.file.wcformat
      *This class represents a serializable WC file
      */
     [XmlInclude(typeof(WFunction))]
-    [XmlInclude(typeof(WavyClass))]
+    [XmlInclude(typeof(WClass))]
     [Serializable]
     public struct WC
     {
@@ -28,9 +28,9 @@ namespace wavynet.file.wcformat
         public string datetime;
         public bool require_dll;
         public Int32[] bytecode;
-        public List<WavyItem> cbank;
+        public List<WItem> cbank;
 
-        public static WC gen_WC(string magic, string filename, string path, string datetime, bool require_dll, Int32[] bytecode, List<WavyItem> cbank)
+        public static WC gen_WC(string magic, string filename, string path, string datetime, bool require_dll, Int32[] bytecode, List<WItem> cbank)
         {
             WC wc = new WC();
             wc.magic = magic;

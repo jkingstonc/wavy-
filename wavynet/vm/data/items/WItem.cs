@@ -16,7 +16,7 @@ namespace wavynet.vm
     [XmlInclude(typeof(Wstring))]
     [XmlInclude(typeof(WFunction))]
     [Serializable]
-    public class WavyItem
+    public class WItem
     {
         public dynamic value;
     }

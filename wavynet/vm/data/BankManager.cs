@@ -11,13 +11,13 @@ namespace wavynet.vm.data
     public class BankManager : VMComponent
     {
         // The original loaded cbank
-        WavyItem[] loaded_cbank;
+        WItem[] loaded_cbank;
         // The data banks this vm uses
         public Bank m_bank, c_bank;
         // The item locks that this vm uses
         public Dictionary<int, ItemLock> m_lock, c_lock = null;
 
-        public BankManager(WavyItem[] loaded_cbank) : base("BankManger")
+        public BankManager(WItem[] loaded_cbank) : base("BankManger")
         {
             this.loaded_cbank = loaded_cbank;
         }
@@ -37,7 +37,7 @@ namespace wavynet.vm.data
         }
 
         // Bind all the lbank data
-        public void bind_lbank_data(WavyItem[] lbank)
+        public void bind_lbank_data(WItem[] lbank)
         {
             LOG("binding all bank data from profile");
             // Loop over each value in the bank profile (M & L) & bind the data to our banks
@@ -52,13 +52,13 @@ namespace wavynet.vm.data
         }
 
         // Request an item from the cbank
-        public WavyItem request_c_item(Core core, int id)
+        public WItem request_c_item(Core core, int id)
         {
             return request_item(core, this.c_bank, this.c_lock, id);
         }
 
         // Request an item from the mbank
-        public WavyItem request_m_item(Core core, int id)
+        public WItem request_m_item(Core core, int id)
         {
             return request_item(core, this.m_bank, this.m_lock, id);
         }
@@ -77,7 +77,7 @@ namespace wavynet.vm.data
 
         // Used when an instruction wants to request access to a bank item
         // The request will only be granted if the item is available
-        public WavyItem request_item(Core core, Bank bank, Dictionary<int, ItemLock> bank_lock, int id)
+        public WItem request_item(Core core, Bank bank, Dictionary<int, ItemLock> bank_lock, int id)
         {
             core.ASSERT_ERR(!bank.contains(id), CoreErrorType.INVALID_BANK_ID, "Bank item doesn't exist: " + id);
 
@@ -105,7 +105,7 @@ namespace wavynet.vm.data
             return null;
         }
 
-        public void assign_item(Core core, int id, WavyItem item)
+        public void assign_item(Core core, int id, WItem item)
         {
             this.m_bank.set(id, item);
         }

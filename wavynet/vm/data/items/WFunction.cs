@@ -5,7 +5,7 @@ using wavynet.vm.core;
 namespace wavynet.vm.data.items
 {
     [Serializable]
-    public class WFunction : WavyItem
+    public class WFunction : WItem
     {
         public string name;
         // Used for native functions, if native, we need to be able to resolve the dll file
@@ -28,7 +28,7 @@ namespace wavynet.vm.data.items
 
         }
 
-        public WavyItem call(List<WavyItem> args)
+        public WItem call(List<WItem> args)
         {
             return null;
         }

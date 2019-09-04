@@ -29,7 +29,7 @@ namespace wavynet.vm.native
         }
 
         // Call a native function, and pass in the NativeEnviroment in use
-        public WavyItem call_native_func(string current_file, string func, WavyItem[] args)
+        public WItem call_native_func(string current_file, string func, WItem[] args)
         {
             // Loop over each class definition (Type) and attempt to call the func
             // Note, we should explicitly check for the correct type

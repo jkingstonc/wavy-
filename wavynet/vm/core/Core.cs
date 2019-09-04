@@ -22,7 +22,7 @@ namespace wavynet.vm.core
         // Program counter
         public int pc;
         // The array of locals that the current function operates on
-        public WavyItem[] locals;
+        public WItem[] locals;
         // The bytecode that the core is executing
         public Int32[] bytecode;
         // The function stack that this core is using
@@ -49,7 +49,7 @@ namespace wavynet.vm.core
             this.native_interface = new NativeInterface(this.vm, this);
             this.state = new CoreState(id, new CoreErrorHandler(), 0, false, 0);
             this.pc = 0;
-            this.locals = new WavyItem[0];
+            this.locals = new WItem[0];
             this.traceback = new TraceBack();
             this.func_stack = new FuncStack(this);
             this.exec_stack = new ExecStack(this);
@@ -125,9 +125,9 @@ namespace wavynet.vm.core
                                 {
                                     Console.ForegroundColor = ConsoleColor.Green;
                                     if(VM.MULTI_CORE)
-                                        Console.WriteLine("{core "+this.state.id+"} "+peek_exec().value);
+                                        Console.WriteLine("{core "+this.state.id+"} "+peek_exec());
                                     else
-                                        Console.WriteLine(peek_exec().value);
+                                        Console.WriteLine(peek_exec());
                                     Console.ForegroundColor = ConsoleColor.Yellow;
                                     goto_next();
                                     break;
@@ -209,7 +209,7 @@ namespace wavynet.vm.core
                             }
                             case Opcode.INVOKE_FUNC:
                                 {
-                                    WavyFunction func = expect_wfunc(pop_exec());
+                                    WFunction func = expect_wfunc(pop_exec());
                                     if(TRACE_DEBUG)
                                     {
                                         func_call_trace(func);
@@ -287,31 +287,27 @@ namespace wavynet.vm.core
                                 }
                             case Opcode.INCREMENT:
                                 {
-                                    WavyItem item = peek_exec();
-                                    var num = expect_numeric(item);
-                                    num++;
-                                    item.value = num;
+                                    WItem num = expect_numeric(peek_exec());
+                                    num.value = num.value + 1;
                                     goto_next();
                                     break;
                                 }
                             case Opcode.DECREMENT:
                                 {
-                                    WavyItem item = peek_exec();
-                                    var num = expect_numeric(item);
-                                    num--;
-                                    item.value = num;
+                                    WItem num = expect_numeric(peek_exec());
+                                    num.value = num.value - 1;
                                     goto_next();
                                     break;
                                 }
                             case Opcode.PSH_ZERO:
                                 {
-                                    push_exec(new WavyItem(0, ItemType.INT));
+                                    push_exec((Wint)0);
                                     goto_next();
                                     break;
                                 }
                             case Opcode.PSH_NULL:
                                 {
-                                    push_exec(new WavyItem(ItemType.NULL));
+                                    push_exec((Wnull)null);
                                     goto_next();
                                     break;
                                 }
@@ -351,35 +347,35 @@ namespace wavynet.vm.core
         }
 
         // We expect a WavyItem to be a numeric
-        private dynamic expect_numeric(WavyItem item)
+        private dynamic expect_numeric(WItem item)
         {
-            ASSERT_ERR(item.type != ItemType.INT && item.type != ItemType.DOUBLE, CoreErrorType.UNEXPECTED_TYPE, "Expected numeric, but got: " + item.type);
-            return item.value;
+            ASSERT_ERR(!(item is Wint) && !(item is Wdouble), CoreErrorType.UNEXPECTED_TYPE, "Expected numeric, but got: " + item.GetType());
+            return item;
         }
 
         // We expect a WavyItem to be an int
-        private dynamic expect_int(WavyItem item)
+        private dynamic expect_int(WItem item)
         {
-            ASSERT_ERR(item.type != ItemType.INT, CoreErrorType.UNEXPECTED_TYPE, "Expected int, but got: " + item.type);
-            return (int)item.value;
+            ASSERT_ERR(item is Wint, CoreErrorType.UNEXPECTED_TYPE, "Expected int, but got: " + item.GetType());
+            return (Wint)item;
         }
 
         // We expect a WavyItem to be a WavyFunction
-        private dynamic expect_wfunc(WavyItem item)
+        private dynamic expect_wfunc(WItem item)
         {
-            ASSERT_ERR(item.type != ItemType.FUNC, CoreErrorType.UNEXPECTED_TYPE, "Expected WavyFunction, but got: " + item.type);
+            ASSERT_ERR(!(item is WFunction), CoreErrorType.UNEXPECTED_TYPE, "Expected WavyFunction, but got: " + item.GetType());
             return item;
         }
 
         // We expect a WavyItem to be a WavyObject
-        private dynamic expect_wobject(WavyItem item)
+        private dynamic expect_wobject(WItem item)
         {
-            ASSERT_ERR(item.type != ItemType.OBJECT, CoreErrorType.UNEXPECTED_TYPE, "Expected WavyObject, but got: " + item.type);
+            ASSERT_ERR(!(item is WObject), CoreErrorType.UNEXPECTED_TYPE, "Expected WavyObject, but got: " + item.GetType());
             return item;
         }
 
         // Perform a function call with a trace
-        private Trace func_call_trace(WavyFunction func)
+        private Trace func_call_trace(WFunction func)
         {
             // Then create a new Trace instance referencing that frame
             Trace trace = new Trace(func_call(func));
@@ -389,12 +385,12 @@ namespace wavynet.vm.core
         }
 
         // Perform a function call
-        private FuncFrame func_call(WavyFunction func)
+        private FuncFrame func_call(WFunction func)
         {
             ASSERT_ERR(this.state.func_depth > MAX_RECURSION, CoreErrorType.MAX_RECURSION, "Maxmimum recursion depth achieved!");
             this.state.func_depth++;
             // Set the size of the locals to the args count & locals count
-            this.locals = new WavyItem[func.args_size + func.locals_size];
+            this.locals = new WItem[func.args_size + func.locals_size];
             // Then define the function arguments passed in that were on the exec stack
             for (int i = 0; i < func.args_size; i++)
                 this.locals[i] = exec_stack.pop();
@@ -425,7 +421,7 @@ namespace wavynet.vm.core
         {
             this.state.func_depth--;
             // First get the return value, by poping it from the exec stack
-            WavyItem return_value = this.exec_stack.pop();
+            WItem return_value = this.exec_stack.pop();
             // Then restore the state of the core
             FuncFrame previous_frame = this.func_stack.pop();
             this.pc = previous_frame.pc;
@@ -463,23 +459,23 @@ namespace wavynet.vm.core
         }
 
         // Pop from the current execution stack in use
-        public WavyItem pop_exec()
+        public WItem pop_exec()
         {
             // We then get the stack and pop the top value
-            WavyItem item = exec_stack.pop();
+            WItem item = exec_stack.pop();
             if (item != null)
                 return item;
             return null;
         }
 
         // Pop from the current execution stack in use
-        public WavyItem peek_exec()
+        public WItem peek_exec()
         {
             return exec_stack.peek();
         }
 
         // Pop from the current execution stack in use
-        public void push_exec(WavyItem item)
+        public void push_exec(WItem item)
         {
             exec_stack.push(item);
         }

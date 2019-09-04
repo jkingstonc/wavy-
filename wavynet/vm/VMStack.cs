@@ -116,11 +116,11 @@ namespace wavynet.vm
     {
         public string func_name;
         public int pc;
-        public WavyItem[] locals;
+        public WItem[] locals;
         public ExecStack exec_stack;
         public Int32[] bytecode;
 
-        public FuncFrame(Core core, string func_name, int pc, WavyItem[] locals, ExecStack exec_stack, Int32[] bytecode)
+        public FuncFrame(Core core, string func_name, int pc, WItem[] locals, ExecStack exec_stack, Int32[] bytecode)
         {
             this.func_name = func_name;
             this.pc = pc;
@@ -141,7 +141,7 @@ namespace wavynet.vm
         }
 
         // Pop the top item from the execution stack
-        public WavyItem pop()
+        public WItem pop()
         {
             ExecFrame frame = this.stack.pop();
             if(frame != null)
@@ -152,13 +152,13 @@ namespace wavynet.vm
         }
 
         // Peek the top item from the execution stack
-        public WavyItem peek()
+        public WItem peek()
         {
             return this.stack.peek().get_obj();
         }
 
         // Push an item to the stack
-        public void push(WavyItem item)
+        public void push(WItem item)
         {
             this.stack.push(new ExecFrame(item));
         }
@@ -174,14 +174,14 @@ namespace wavynet.vm
     // Frame that sits on the ExecStack
     public class ExecFrame
     {
-        private WavyItem item;
+        private WItem item;
 
-        public ExecFrame(WavyItem item)
+        public ExecFrame(WItem item)
         {
             this.item = item;
         }
 
-        public WavyItem get_obj()
+        public WItem get_obj()
         {
             return this.item;
         }

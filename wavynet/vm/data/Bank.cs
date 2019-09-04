@@ -11,21 +11,21 @@ namespace wavynet.vm.data
     public class Bank
     {
         // Bank items are referenced via an integer id
-        private Dictionary<int, WavyItem> bank_dict;
+        private Dictionary<int, WItem> bank_dict;
         private Type type;
 
         public Bank(Type type)
         {
-            this.bank_dict = new Dictionary<int, WavyItem>();
+            this.bank_dict = new Dictionary<int, WItem>();
             this.type = type;
         }
 
-        public void add(int id, WavyItem item)
+        public void add(int id, WItem item)
         {
             this.bank_dict.Add(id, item);
         }
 
-        public void set(int id, WavyItem item)
+        public void set(int id, WItem item)
         {
             this.bank_dict[id] = item;
         }
@@ -35,7 +35,7 @@ namespace wavynet.vm.data
             return this.type;
         }
 
-        public WavyItem get_item(int id)
+        public WItem get_item(int id)
         {
             return this.bank_dict[id];
         }

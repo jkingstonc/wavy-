@@ -1,8 +1,8 @@
 ﻿namespace wavynet.vm.data.items
 {
-    class WavyObject : WavyItem
+    class WObject : WItem
     {
-        public WavyObject()
+        public WObject()
         {
 
         }

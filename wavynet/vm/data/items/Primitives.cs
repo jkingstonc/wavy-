@@ -3,7 +3,7 @@
 namespace wavynet.vm.data.items
 {
     [Serializable]
-    public class Wnull : WavyItem
+    public class Wnull : WItem
     {
         private Wnull()
         {
@@ -21,7 +21,7 @@ namespace wavynet.vm.data.items
     }
 
     [Serializable]
-    public class Wbool : WavyItem
+    public class Wbool : WItem
     {
         private Wbool(bool value)
         {
@@ -50,7 +50,7 @@ namespace wavynet.vm.data.items
     }
 
     [Serializable]
-    public class Wint : WavyItem
+    public class Wint : WItem
     {
         private Wint(int value)
         {
@@ -79,7 +79,7 @@ namespace wavynet.vm.data.items
     }
 
     [Serializable]
-    public class Wdouble : WavyItem
+    public class Wdouble : WItem
     {
         private Wdouble(double value)
         {
@@ -108,7 +108,7 @@ namespace wavynet.vm.data.items
     }
 
     [Serializable]
-    public class Wstring : WavyItem
+    public class Wstring : WItem
     {
         private Wstring(string value)
         {
