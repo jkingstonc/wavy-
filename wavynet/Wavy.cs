@@ -28,11 +28,13 @@ namespace wavynet
                     true,
                     new Int32[]
                     {
-                        (Int32)Opcode.LD_CONST, 1,
-                        (Int32)Opcode.INVOKE_FUNC,
+                        (Int32)Opcode.LD_CONST, 2,
+                        (Int32)Opcode.BANK_DEFINE, 0,
+                        (Int32)Opcode.LD_VAR, 0,
+                        (Int32)Opcode.DECREMENT,
                         (Int32)Opcode.PRINT,
-                        (Int32)Opcode.LD_CONST, 0,
-                        (Int32)Opcode.PRINT,
+                        (Int32)Opcode.IF_ZERO, -5,
+                        (Int32)Opcode.END,
                     },
                     new List<WItem>()
                     {

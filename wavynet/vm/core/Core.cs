@@ -5,6 +5,7 @@
 
 #define CORE_INSTR_DEBUG
 #define CORE_TRACE_DEBUG
+#define VM_MULTI_CORE
 
 using System;
 using System.Threading;
@@ -111,7 +112,11 @@ namespace wavynet.vm.core
 
 #if CORE_INSTR_DEBUG
                     Console.ForegroundColor = ConsoleColor.Blue;
+#if VM_MULTI_CORE
+                    Console.WriteLine("{core "+this.state.id+"} op: " + (Opcode)op);    
+#else
                     Console.WriteLine("op: " + (Opcode)op);
+#endif
                     Console.ForegroundColor = ConsoleColor.Yellow;
 #endif
 
@@ -154,7 +159,6 @@ namespace wavynet.vm.core
                                 {
                                     Int32 id = get_arg();
                                     push_exec(this.vm.bank_manager.request_c_item(this, id));
-                                    this.vm.bank_manager.release_c_item(this, id);
                                     goto_next();
                                     break;
                                 }
@@ -177,12 +181,9 @@ namespace wavynet.vm.core
                                     goto_next();
                                     break;
                                 }
-                            case Opcode.BANK_VAR:
+                            case Opcode.BANK_DEFINE:
                                 {
-                                    Int32 id = get_arg();
-                                    this.vm.bank_manager.request_m_item(this, id);
-                                    this.vm.bank_manager.assign_item(this, id, pop_exec());
-                                    this.vm.bank_manager.request_m_item(this, id);
+                                    this.vm.bank_manager.define_item(this, get_arg(), pop_exec());
                                     goto_next();
                                     break;
                                 }

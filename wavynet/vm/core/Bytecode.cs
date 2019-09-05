@@ -30,9 +30,9 @@ namespace wavynet.vm.core
         LD_VAR = 0xD,           // Load a var from the MBank to the stack
         LD_LOC = 0xE,           // Load a local variable to the stack
 
-        BANK_VAR = 0xF,         // Define a variable to the bank
-        BANK_ASSIGN = 0x10,      // Assign a value to a variable in the bank
-        LOCAL_ASSIGN = 0x11,     // Store a value to a local variable index
+        BANK_DEFINE = 0xF,      // Define a variable to the bank
+        BANK_ASSIGN = 0x10,     // Assign a value to a variable in the bank
+        LOCAL_ASSIGN = 0x11,    // Store a value to a local variable index
 
         MAKE_CLASS = 0x12,       // Takes a class specification from the lbank, and generates a WavyClass which gets loaded to the MBank
         MAKE_FUNC = 0x13,        // Takes a function specification from the lbank, and generates a WavyFunction which gets loaded to the MBank

@@ -3,6 +3,8 @@
  * 27/08/19
  */
 
+#define VM_MULTI_CORE
+
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -62,6 +64,7 @@ namespace wavynet.vm.core
         public int add_core()
         {
 #if VM_MULTI_CORE
+#else
             ASSERT_ERR(this.next_id > 0, VMErrorType.INVALID_CORE_COUNT, "Cannot have multiple cores in single core mode!");
 #endif
             int id = gen_id();

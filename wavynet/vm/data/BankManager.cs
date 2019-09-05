@@ -2,6 +2,9 @@
  * James Clarke
  * 22/08/19
  */
+
+#define VM_MULTI_CORE
+
 using System.Collections.Generic;
 using wavynet.vm.core;
 
@@ -15,7 +18,7 @@ namespace wavynet.vm.data
         // The data banks this vm uses
         public Bank m_bank, c_bank;
         // The item locks that this vm uses
-        public Dictionary<int, ItemLock> m_lock, c_lock = null;
+        public Dictionary<int, ItemLock> m_lock = null;
 
         public BankManager(WItem[] loaded_cbank) : base("BankManger")
         {
@@ -29,7 +32,6 @@ namespace wavynet.vm.data
             this.c_bank = new Bank(Bank.Type.CBank);
 #if VM_MULTI_CORE
             m_lock = new Dictionary<int, ItemLock>();
-            c_lock = new Dictionary<int, ItemLock>();
 #endif
             bind_lbank_data(this.loaded_cbank);
         }
@@ -42,63 +44,53 @@ namespace wavynet.vm.data
             for (int i = 0; i < lbank.Length; i++)
             {
                 this.c_bank.add(i, lbank[i]);
-#if VM_MULTI_CORE
-                c_lock.Add(i, new ItemLock());
-#endif
             }
         }
 
         // Request an item from the cbank
         public WItem request_c_item(Core core, int id)
         {
-            return request_item(core, this.c_bank, this.c_lock, id);
-        }
-
-        // Request an item from the mbank
-        public WItem request_m_item(Core core, int id)
-        {
-            return request_item(core, this.m_bank, this.m_lock, id);
-        }
-
-        // Request an item from the cbank
-        public void release_c_item(Core core, int id)
-        {
-            release_item(core, this.c_bank, this.c_lock, id);
-        }
-
-        // Request an item from the mbank
-        public void release_m_item(Core core, int id)
-        {
-            release_item(core, this.m_bank, this.m_lock, id);
+            return this.c_bank.get_item(id);
         }
 
         // Used when an instruction wants to request access to a bank item
         // The request will only be granted if the item is available
-        public WItem request_item(Core core, Bank bank, Dictionary<int, ItemLock> bank_lock, int id)
+        public WItem request_m_item(Core core, int id)
         {
-            core.ASSERT_ERR(!bank.contains(id), CoreErrorType.INVALID_BANK_ID, "Bank item doesn't exist: " + id);
+            core.ASSERT_ERR(!this.m_bank.contains(id), CoreErrorType.INVALID_BANK_ID, "Bank item doesn't exist: " + id);
 
             // Dealing with multi threading
 #if VM_MULTI_CORE
             
             // First request use of the item
-            if (bank_lock[id].request_use(core.state.id))
+            if (this.m_lock[id].request_use(core.state.id))
             {
                 core.state.multi_core_state = MultiCoreState.RUNNING;
-                return bank.get_item(id);
+                return this.m_bank.get_item(id);
             }
             // If we are denied the request, we are in a BLOCKED state
             else
             {
                 core.state.multi_core_state = MultiCoreState.BLOCKED;
-                return null
+                return null;
             }
-            
+
 #else
             // Dealing with a single thread
             // We don't need to check locks, as it impossible to encounter concurrent locks
-            return bank.get_item(id);
+            return this.m_bank.get_item(id);
 #endif
+        }
+
+        public void define_item(Core core, int id, WItem item)
+        {
+            ASSERT_ERR(this.m_bank.contains(id), VMErrorType.ALREADY_DEFINED, "Global variable with id '"+id+"' has already be defined!");
+            
+            this.m_bank.add(id, item);
+#if VM_MULTI_CORE
+            this.m_lock.Add(id, new ItemLock());
+#endif
+
         }
 
         public void assign_item(Core core, int id, WItem item)
@@ -107,11 +99,11 @@ namespace wavynet.vm.data
         }
 
         // Called when the core is done with a bank item
-        public void release_item(Core core, Bank bank, Dictionary<int, ItemLock> bank_lock, int id)
+        public void release_m_item(Core core, int id)
         {
 #if VM_MULTI_CORE
-            core.ASSERT_ERR(!bank.contains(id), CoreErrorType.INVALID_BANK_ID, "Bank item doesn't exist, so can't be released: " + id);
-            bank_lock[id].release_use();
+            core.ASSERT_ERR(!this.m_bank.contains(id), CoreErrorType.INVALID_BANK_ID, "Bank item doesn't exist, so can't be released: " + id);
+            this.m_lock[id].release_use();
 #endif
         }
     }

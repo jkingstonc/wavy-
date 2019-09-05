@@ -141,5 +141,6 @@ namespace wavynet.vm
         INVALID_CORE_ID,            // For when accessing cores uses an invalid id
         INVALID_CORE_COUNT,         // Invalid number of cores created
         INVALID_WC,
+        ALREADY_DEFINED,
     }
 }
