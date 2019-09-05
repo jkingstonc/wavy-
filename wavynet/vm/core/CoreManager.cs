@@ -51,13 +51,22 @@ namespace wavynet.vm.core
             abort_all(id);
         }
 
-        // Create and run a new core instance
-        public void create_and_run(object sender, EventArgs args)
+        // Create a new core instance
+        public void root_create(object sender, EventArgs args)
         {
             int id = add_core();
-            LOG("creating & starting new core '" + id + "'");
+            LOG("creating new core '" + id + "'");
             setup_core(id, ((CoreCreateEventArgs)args).bytecode);
-            start_core(id);
+            //start_core(id);
+        }
+
+        public void root_run()
+        {
+            foreach (KeyValuePair<int, Core> pair in this.core_pool)
+            {
+                LOG("running new core '" + pair.Key + "'");
+                start_core(pair.Key);
+            }
         }
 
         // Add a new core to the pool
@@ -104,6 +113,8 @@ namespace wavynet.vm.core
         public void join_all_cores()
         {
             LOG("joining thread to all cores");
+            // Run all cores
+            root_run();
             // This thread will block here until the close_vm_event is sent.
             end_vm_event.WaitOne();
             end_vm_event.Reset();

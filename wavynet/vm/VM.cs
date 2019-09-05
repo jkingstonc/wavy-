@@ -5,6 +5,7 @@
 
 #define VM_MULTI_CORE
 
+using System;
 using System.Threading;
 using wavynet.file.wcformat;
 using wavynet.vm.core;
@@ -61,8 +62,20 @@ namespace wavynet.vm
             {
                 ASSERT_ERR(this.wc_profile.magic != WC.MAGIC_SEQUENCE, VMErrorType.INVALID_WC, "Magic sequence incorrect for file '"+this.wc_profile.filename+"'!");
                 // Create and run the main core
-                this.core_manager.new_core_event += this.core_manager.create_and_run;
+                this.core_manager.new_core_event += this.core_manager.root_create;
                 this.core_manager.new_core_event?.Invoke(this, new CoreCreateEventArgs(-1, this.wc_profile.bytecode));
+                this.core_manager.new_core_event?.Invoke(this, new CoreCreateEventArgs(-1, new Int32[]
+                    {
+                        (Int32)Opcode.LD_CONST, 0,
+                        (Int32)Opcode.PRINT,
+                        (Int32)Opcode.PRINT,
+                        (Int32)Opcode.PRINT,
+                        (Int32)Opcode.PRINT,
+                        (Int32)Opcode.PRINT,
+                        (Int32)Opcode.LD_VAR, 0,
+                        (Int32)Opcode.PRINT,
+                        (Int32)Opcode.END,
+                    }));
                 // Join all core threads to this (wait for all cores to finish)
                 this.core_manager.join_all_cores();
             }

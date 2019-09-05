@@ -28,23 +28,21 @@ namespace wavynet
                     true,
                     new Int32[]
                     {
-                        (Int32)Opcode.LD_CONST, 2,
+                        (Int32)Opcode.LD_CONST, 1,
                         (Int32)Opcode.BANK_DEFINE, 0,
-                        (Int32)Opcode.LD_VAR, 0,
-                        (Int32)Opcode.DECREMENT,
+                        (Int32)Opcode.LD_CONST, 2,
                         (Int32)Opcode.PRINT,
-                        (Int32)Opcode.IF_ZERO, -5,
                         (Int32)Opcode.END,
                     },
                     new List<WItem>()
                     {
-                        (Wstring)"Done!",
                         new WFunction("native_test", true, 0, 0, null),
-                        (Wint)50
+                        (Wint)500,
+                        (Wstring)"Banked 500",
                     }
                 ),
                 @"F:\OneDrive - Lancaster University\programming\c#\wavy-\test.wc~"
-            ); ; ;
+            );
 
 
             Wavy.logger = new Logger();
