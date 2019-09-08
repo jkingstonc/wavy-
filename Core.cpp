@@ -10,8 +10,8 @@ James Clarke
 
 Core::Core(std::shared_ptr<VM> vm, uint8_t id)
 {
+	this->component_id = std::string("Core " + id);
 	this->vm = vm;
-	this->component_id = std::string("Core "+id);
 	this->state.id = id;
 	this->pc = 0;
 	this->exec_stack = Stack<WITEM>();
@@ -56,12 +56,32 @@ void Core::Eval()
 			case NOP:
 				break;
 			case PRINT:
-				PrintOP(); break;
+			{
+				LOG("print");
+				break;
+			}
+			case POP:
+				POP_EXEC(); break;
+			case PEEK:
+				PEEK_EXEC(); break;
 			case LD_CONST:
 			{
-				WITEM item = this->vm->GetBankManager()->RequestItem(GET_ARG(), C_BANK);
-				PUSH_EXEC(item);
+				PUSH_EXEC(REQ_C_ITEM(GET_ARG())); break;
 			}
+			case LD_VAR:
+			{
+				PUSH_EXEC(REQ_M_ITEM(GET_ARG())); break;
+			}
+			case LD_LOCAL:
+			{
+				PUSH_EXEC(GET_LOCAL(GET_ARG())); break;
+			}
+			case LD_ZERO:
+				PUSH_EXEC(TO_WINT(0)); break;
+			case DEFINE_VAR:
+				DEFINE_MITEM(GET_ARG(), POP_EXEC());  break;
+			case ASSIGN_VAR:
+				ASSIGN_MITEM(GET_ARG(), POP_EXEC());  break;
 			default:
 				break;
 			}

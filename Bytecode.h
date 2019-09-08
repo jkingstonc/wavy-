@@ -7,10 +7,15 @@ James Clarke
 
 enum Opcode
 {
-	END = 0x0,
-	NOP = 0x1,
-	PRINT = 0x2,
-	LD_CONST = 0x3,
+	END,
+	NOP,
+	PRINT,
+	POP,
+	PEEK,
+	LD_CONST,
+	LD_VAR,
+	LD_LOCAL,
+	LD_ZERO,
+	DEFINE_VAR,
+	ASSIGN_VAR,
 };
-
-void PrintOP();

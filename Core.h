@@ -16,13 +16,19 @@ James Clarke
 #define MAX_CORE_COUNT 2^8
 
 #define PUSH_EXEC(item) this->exec_stack.Push(item)
-#define POP_EXEC(item) this->exec_stack.Pop()
-#define PEEK_EXEC(item) this->exec_stack.Peek()
+#define POP_EXEC() this->exec_stack.Pop()
+#define PEEK_EXEC() this->exec_stack.Peek()
 
 #define END() (this->bytecode->at(this->pc)==END)
 
 #define GOTO_NEXT() this->bytecode->at(this->pc++)
 #define GET_ARG() GOTO_NEXT()
+
+#define REQ_C_ITEM(id) this->vm->GetBankManager()->RequestItem(id, C_BANK)
+#define REQ_M_ITEM(id) this->vm->GetBankManager()->RequestItem(id, M_BANK)
+#define GET_LOCAL(id) this->locals[id]
+#define DEFINE_MITEM(id, item) this->vm->GetBankManager()->DefineItem(id, M_BANK, item)
+#define ASSIGN_MITEM(id, item) this->vm->GetBankManager()->AssignItem(id, M_BANK, item)
 
 typedef struct CoreState
 {
