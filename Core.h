@@ -11,6 +11,10 @@ James Clarke
 #include "Component.h"
 #include "Bytecode.h"
 
+#ifndef INSTRUCTION_DEBUG
+	#define INSTRUCTION_DEBUG
+#endif
+
 #define MAX_PC 2^32
 #define MAX_RECURSION 2^8
 #define MAX_CORE_COUNT 2^8
@@ -50,9 +54,9 @@ public:
 private:
 	std::shared_ptr<VM> vm;
 	uint32_t pc;
-	std::shared_ptr<std::vector<wint>> bytecode;
-	Stack<WITEM> exec_stack;
+	std::shared_ptr<std::vector<int32_t>> bytecode;
+	Stack<std::shared_ptr<WItem>> exec_stack;
 	Stack<FuncFrame> func_stack;
-	std::vector<WITEM> locals;
+	std::vector<std::shared_ptr<WItem>> locals;
 	CoreState state;
 };

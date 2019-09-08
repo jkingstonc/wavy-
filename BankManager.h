@@ -27,10 +27,10 @@ public:
 	void Start();
 	void Run();
 	void Close();
-	void BindCProfile(std::shared_ptr<std::vector<WITEM>> items);
-	void DefineItem(BANK_ID id, uint8_t bank_type, WITEM item);
-	void AssignItem(BANK_ID id, uint8_t bank_type, WITEM item);
-	WITEM RequestItem(BANK_ID id, uint8_t bank_type);
+	void BindCProfile(std::shared_ptr<std::vector<std::shared_ptr<WItem>>> items);
+	void DefineItem(BANK_ID id, uint8_t bank_type, std::shared_ptr<WItem> item);
+	void AssignItem(BANK_ID id, uint8_t bank_type, std::shared_ptr<WItem> item);
+	std::shared_ptr<WItem> RequestItem(BANK_ID id, uint8_t bank_type);
 private:
 	std::shared_ptr<Bank> cbank;
 	std::shared_ptr<Bank> mbank;
@@ -40,5 +40,5 @@ class Bank
 {
 public:
 	int bank_type : 1;
-	std::map<BANK_ID, WITEM> items;
+	std::map<BANK_ID, std::shared_ptr<WItem>> items;
 };

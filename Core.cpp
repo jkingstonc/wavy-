@@ -14,9 +14,9 @@ Core::Core(std::shared_ptr<VM> vm, uint8_t id)
 	this->vm = vm;
 	this->state.id = id;
 	this->pc = 0;
-	this->exec_stack = Stack<WITEM>();
+	this->exec_stack = Stack<std::shared_ptr<WItem>>();
 	this->func_stack = Stack<FuncFrame>();
-	this->locals = std::vector<WITEM>();
+	this->locals = std::vector<std::shared_ptr<WItem>>();
 }
 
 Core::~Core()
@@ -49,41 +49,52 @@ void Core::Eval()
 		while (!END())
 		{
 			int32_t next = GOTO_NEXT();
+
+			#ifdef INSTRUCTION_DEBUG
+				std::cout << "Next: ";
+				std::cout << next << std::endl;
+			#endif
+			
 			switch (next)
 			{
-			case END:
-				break;
-			case NOP:
-				break;
-			case PRINT:
-			{
-				LOG("print");
-				break;
-			}
-			case POP:
-				POP_EXEC(); break;
-			case PEEK:
-				PEEK_EXEC(); break;
-			case LD_CONST:
-			{
-				PUSH_EXEC(REQ_C_ITEM(GET_ARG())); break;
-			}
-			case LD_VAR:
-			{
-				PUSH_EXEC(REQ_M_ITEM(GET_ARG())); break;
-			}
-			case LD_LOCAL:
-			{
-				PUSH_EXEC(GET_LOCAL(GET_ARG())); break;
-			}
-			case LD_ZERO:
-				PUSH_EXEC(TO_WINT(0)); break;
-			case DEFINE_VAR:
-				DEFINE_MITEM(GET_ARG(), POP_EXEC());  break;
-			case ASSIGN_VAR:
-				ASSIGN_MITEM(GET_ARG(), POP_EXEC());  break;
-			default:
-				break;
+				case END:
+					break;
+				case NOP:
+					break;
+				case PRINT:
+				{
+					std::cout << ITEM_DEBUG(PEEK_EXEC()) << std::endl;
+					break;
+				}
+				case POP:
+					POP_EXEC(); break;
+				case PEEK:
+					PEEK_EXEC(); break;
+				case LD_CONST:
+				{
+					// Load the shared_ptr from the cbank, & create a copy for the stack
+					// This is becuase the cbank is immuatble
+					std::shared_ptr<WItem> item = REQ_C_ITEM(GET_ARG());
+					PUSH_EXEC(std::make_shared<WItem>(*item)); break;
+				}
+				case LD_VAR:
+				{
+					// We don't create a copy, as the mbank is mutable
+					std::shared_ptr<WItem> item = REQ_M_ITEM(GET_ARG());
+					PUSH_EXEC(item); break;
+				}
+				case LD_LOCAL:
+				{
+					PUSH_EXEC(GET_LOCAL(GET_ARG())); break;
+				}
+				case LD_ZERO:
+					PUSH_EXEC(std::make_shared<WInt>(0)); break;
+				case DEFINE_VAR:
+					DEFINE_MITEM(GET_ARG(), POP_EXEC());  break;
+				case ASSIGN_VAR:
+					ASSIGN_MITEM(GET_ARG(), POP_EXEC());  break;
+				default:
+					break;
 			}
 		}
 	}

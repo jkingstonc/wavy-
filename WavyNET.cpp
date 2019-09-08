@@ -18,7 +18,7 @@ int main()
 
 	std::shared_ptr<WCProfile> wc = std::make_shared<WCProfile>();
 	wc->magic = std::string("WATERCLOSET");
-	wc->bytecode = std::make_shared<std::vector<wint>>(
+	wc->bytecode = std::make_shared<std::vector<int32_t>>(
 		std::vector<int32_t>
 	{
 		LD_CONST, 2, 
@@ -26,12 +26,12 @@ int main()
 		LD_VAR, 0,
 		PRINT,
 		END,
-	});
-	wc->c_profile = std::make_shared<std::vector<WITEM>>(
-		std::vector<WITEM>
-	{
-		TO_WINT(123), TO_WINT(456), Wfunc(),
-	});
+	});	
+	wc->c_profile = std::make_shared<std::vector<std::shared_ptr<WItem>>>(
+		std::vector<std::shared_ptr<WItem>>
+		{
+			std::make_shared<WInt>(123), std::make_shared<WInt>(456),
+		});
 
 	// Bind the vm to the native enviroment
 

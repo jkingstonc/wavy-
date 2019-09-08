@@ -27,7 +27,7 @@ public:
 	}
 	T Pop()
 	{
-		WITEM item = this->vec.back();
+		T item = this->vec.back();
 		this->vec.pop_back();
 		return item;
 	}
@@ -45,8 +45,8 @@ class FuncFrame
 {
 public:
 	uint32_t pc;
-	std::vector<WITEM> locals;
-	Stack<WITEM> * exec_stack;
+	std::vector<std::shared_ptr<WItem>> locals;
+	std::shared_ptr<Stack<std::shared_ptr<WItem>>> exec_stack;
     std::vector<int32_t> bytecode;
 private:
 };
