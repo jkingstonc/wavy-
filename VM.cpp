@@ -31,6 +31,7 @@ void VM::Run()
 
 void VM::Close()
 {
+	this->bank_manager->FreeBanks();
 	this->core_manager->Close();
 	this->bank_manager->Close();
 }

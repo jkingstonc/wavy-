@@ -40,6 +40,12 @@ void BankManager::BindCProfile(std::shared_ptr<std::vector<WItem*>> items)
 		this->cbank->items.insert(std::pair<uint32_t, WItem*>(i, items->at(i)));
 }
 
+void BankManager::FreeBanks()
+{
+	this->cbank->Free();
+	this->mbank->Free();
+}
+
 void BankManager::DefineItem(BANK_ID id, uint8_t bank_type, WItem* item)
 {
 	auto bank = GET_BANK(bank_type);
@@ -66,4 +72,17 @@ WItem* BankManager::RequestItem(BANK_ID id, uint8_t bank_type)
 		return iter->second;
 	}
 	return nullptr;
+}
+
+
+void Bank::Free()
+{
+	/*// Foreach item in the cbank in the wcprofile, delete it
+	for (uint32_t i = 0; i < this->items.size(); i++)
+		delete this->items.at(i);*/
+
+	for (auto it = this->items.begin(); it != this->items.end(); /* don't increment here*/) {
+		delete it->second;
+		it = this->items.erase(it);  // update here
+	}
 }

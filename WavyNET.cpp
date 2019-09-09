@@ -22,15 +22,13 @@ int main()
 		std::vector<int32_t>
 	{
 		LD_CONST, 1, 
-		DEFINE_VAR, 0, 
-		LD_VAR, 0,
 		PRINT,
 		END,
 	});	
 	wc->c_profile = std::make_shared<std::vector<WItem*>>(
 		std::vector<WItem*>
 		{
-			&WInt(123),&WInt(456),
+			new WInt(123), new WInt(456),
 		});
 
 	// Bind the vm to the native enviroment

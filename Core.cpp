@@ -73,12 +73,9 @@ void Core::Eval()
 					PEEK_EXEC(); break;
 				case LD_CONST:
 				{
-					// Load the shared_ptr from the cbank, & create a copy for the stack
-					// This is becuase the cbank is immuatble
-					/*std::shared_ptr<WItem> item = REQ_C_ITEM(GET_ARG());
-					PUSH_EXEC(std::make_shared<WItem>(*item)); break;*/
-					WItem* item = REQ_C_ITEM(GET_ARG());
-					PUSH_EXEC(item);
+					// Load the ptr from the cbank & push it to the stack
+					// NOTE: This should copy the value
+					PUSH_EXEC(REQ_C_ITEM(GET_ARG()));
 					break;
 				}
 				case LD_VAR:

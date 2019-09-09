@@ -28,6 +28,7 @@ public:
 	void Run();
 	void Close();
 	void BindCProfile(std::shared_ptr<std::vector<WItem*>> items);
+	void FreeBanks();
 	void DefineItem(BANK_ID id, uint8_t bank_type, WItem* item);
 	void AssignItem(BANK_ID id, uint8_t bank_type, WItem* item);
 	WItem* RequestItem(BANK_ID id, uint8_t bank_type);
@@ -43,6 +44,7 @@ public:
 	{
 		this->bank_type = bank_type;
 	}
+	void Free();
 	uint8_t bank_type;
 	std::map<BANK_ID, WItem*> items;
 };
