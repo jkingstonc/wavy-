@@ -63,42 +63,61 @@ void Core::Eval()
 					break;
 				case PRINT:
 				{
-					//std::cout << "Print Debug: " << ITEM_DEBUG(PEEK_EXEC()) << std::endl;
-					std::cout << ITEM_DEBUG(PEEK_EXEC()) << std::endl;
+					std::cout << "Print Debug: " << ITEM_DEBUG(PEEK_EXEC()) << std::endl;
 					break;
 				}
 				case POP:
 					POP_EXEC(); break;
 				case PEEK:
 					PEEK_EXEC(); break;
+				// On load operations, we create a copy of the pointer on the stack
+				// rather than heap allocation to boost performance. When performing
+				// define/assign operations, we heap allocate a new pointer & copy the
+				// stack pointer to it.
 				case LD_CONST:
 				{
-					// Load the ptr from the cbank & push it to the stack
-					// NOTE: This should copy the value
-					PUSH_EXEC(REQ_C_ITEM(GET_ARG()));
+					WItem* c = REQ_C_ITEM(GET_ARG());
+					WItem* cpy = &WItem();
+					*cpy = *c;
+					PUSH_EXEC(cpy);
 					break;
 				}
 				case LD_VAR:
 				{
-					// We don't create a copy, as the mbank is mutable
-					/*std::shared_ptr<WItem> item = REQ_M_ITEM(GET_ARG());
-					PUSH_EXEC(item); break;*/
-					WItem* item = REQ_M_ITEM(GET_ARG());
-					PUSH_EXEC(item);
+					WItem* m = REQ_M_ITEM(GET_ARG());
+					WItem* cpy = &WItem();
+					*cpy = *m;
+					PUSH_EXEC(cpy);
 					break;
 				}
 				case LD_LOCAL:
 				{
-					PUSH_EXEC(GET_LOCAL(GET_ARG())); break;
+					WItem* l = GET_LOCAL(GET_ARG());
+					WItem* cpy = &WItem();
+					*cpy = *l;
+					PUSH_EXEC(cpy); break;
 				}
 				case LD_ZERO:
 					/*PUSH_EXEC(std::make_shared<WInt>(0)); break;*/
 					PUSH_EXEC(&WInt(0));
 					break;
-				case DEFINE_VAR:
-					DEFINE_MITEM(GET_ARG(), POP_EXEC());  break;
-				case ASSIGN_VAR:
-					ASSIGN_MITEM(GET_ARG(), POP_EXEC());  break;
+				case DEFINE_VAR: 
+				{
+					// Create a copy of the stack pointer
+					WItem* cpy = new WItem();
+					*cpy = *POP_EXEC();
+					DEFINE_MITEM(GET_ARG(), cpy);
+					break; 
+				}
+				case ASSIGN_VAR: 
+				{
+					// Create a copy of the stack pointer
+					WItem* cpy = new WItem();
+					*cpy = *POP_EXEC();
+					ASSIGN_MITEM(GET_ARG(), cpy);
+					break;
+				}
+					//ASSIGN_MITEM(GET_ARG(), POP_EXEC());  break;
 				default:
 					break;
 			}

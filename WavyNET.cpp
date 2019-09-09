@@ -22,6 +22,8 @@ int main()
 		std::vector<int32_t>
 	{
 		LD_CONST, 1, 
+		DEFINE_VAR, 0,
+		LD_VAR, 0,
 		PRINT,
 		END,
 	});	

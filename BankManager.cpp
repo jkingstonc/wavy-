@@ -59,7 +59,11 @@ void BankManager::AssignItem(BANK_ID id, uint8_t bank_type, WItem* item)
 	auto bank = GET_BANK(bank_type);
 	// Check if the cbank contains the item id
 	if (bank->items.count(id))
+	{
+		// First delete the old pointer, and replace it with the new once
+		delete bank->items[id];
 		bank->items[id] = item;
+	}
 }
 
 WItem* BankManager::RequestItem(BANK_ID id, uint8_t bank_type)
@@ -77,12 +81,9 @@ WItem* BankManager::RequestItem(BANK_ID id, uint8_t bank_type)
 
 void Bank::Free()
 {
-	/*// Foreach item in the cbank in the wcprofile, delete it
-	for (uint32_t i = 0; i < this->items.size(); i++)
-		delete this->items.at(i);*/
-
-	for (auto it = this->items.begin(); it != this->items.end(); /* don't increment here*/) {
+	// Foreach item in the cbank in the wcprofile, delete it
+	for (auto it = this->items.begin(); it != this->items.end();) {
 		delete it->second;
-		it = this->items.erase(it);  // update here
+		it = this->items.erase(it);
 	}
 }
