@@ -21,16 +21,16 @@ int main()
 	wc->bytecode = std::make_shared<std::vector<int32_t>>(
 		std::vector<int32_t>
 	{
-		LD_CONST, 2, 
+		LD_CONST, 1, 
 		DEFINE_VAR, 0, 
 		LD_VAR, 0,
 		PRINT,
 		END,
 	});	
-	wc->c_profile = std::make_shared<std::vector<std::shared_ptr<WItem>>>(
-		std::vector<std::shared_ptr<WItem>>
+	wc->c_profile = std::make_shared<std::vector<WItem*>>(
+		std::vector<WItem*>
 		{
-			std::make_shared<WInt>(123), std::make_shared<WInt>(456),
+			&WInt(123),&WInt(456),
 		});
 
 	// Bind the vm to the native enviroment

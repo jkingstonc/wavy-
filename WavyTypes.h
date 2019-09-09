@@ -84,9 +84,13 @@ public:
 class WFunc : public WItem
 {
 public:
-	WFunc()
+	WFunc(const char* name, uint8_t arg_count, uint8_t local_count, std::byte flags)
 	{
 		this->info.type = WFUNC;
+		this->name = name;
+		this->arg_count = arg_count;
+		this->local_count = local_count;
+		this->flags = flags;
 	}
 	const char* name;
 	uint8_t arg_count;

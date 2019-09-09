@@ -17,8 +17,8 @@ BankManager::~BankManager()
 void BankManager::Start()
 {
 	Component::Start();
-	this->cbank = std::make_shared<Bank>();
-	this->mbank = std::make_shared<Bank>();
+	this->cbank = std::make_shared<Bank>(0);
+	this->mbank = std::make_shared<Bank>(1);
 }
 
 void BankManager::Run()
@@ -32,15 +32,15 @@ void BankManager::Close()
 }
 
 
-void BankManager::BindCProfile(std::shared_ptr<std::vector<std::shared_ptr<WItem>>> items)
+void BankManager::BindCProfile(std::shared_ptr<std::vector<WItem*>> items)
 {
 	LOG("Binding C Profile...");
 	// Foreach item in the cbank in the wcprofile, copy it to the cbank
 	for (uint32_t i = 0; i < items->size(); i++)
-		this->cbank->items.insert(std::pair<uint32_t, std::shared_ptr<WItem>>(i, items->at(i)));
+		this->cbank->items.insert(std::pair<uint32_t, WItem*>(i, items->at(i)));
 }
 
-void BankManager::DefineItem(BANK_ID id, uint8_t bank_type, std::shared_ptr<WItem> item)
+void BankManager::DefineItem(BANK_ID id, uint8_t bank_type, WItem* item)
 {
 	auto bank = GET_BANK(bank_type);
 	// Check if the cbank doesn't contain the item id
@@ -48,7 +48,7 @@ void BankManager::DefineItem(BANK_ID id, uint8_t bank_type, std::shared_ptr<WIte
 		bank->items[id] = item;
 }
 
-void BankManager::AssignItem(BANK_ID id, uint8_t bank_type, std::shared_ptr<WItem> item)
+void BankManager::AssignItem(BANK_ID id, uint8_t bank_type, WItem* item)
 {
 	auto bank = GET_BANK(bank_type);
 	// Check if the cbank contains the item id
@@ -56,11 +56,14 @@ void BankManager::AssignItem(BANK_ID id, uint8_t bank_type, std::shared_ptr<WIte
 		bank->items[id] = item;
 }
 
-std::shared_ptr<WItem> BankManager::RequestItem(BANK_ID id, uint8_t bank_type)
+WItem* BankManager::RequestItem(BANK_ID id, uint8_t bank_type)
 {
 	auto bank = GET_BANK(bank_type);
 	// Check if the cbank contains the item id
-	if (bank->items.count(id))
-		return bank->items.at(id);
-	return std::make_shared<WInt>(0);
+	auto iter = bank->items.find(id);
+	if (iter != bank->items.end())
+	{
+		return iter->second;
+	}
+	return nullptr;
 }

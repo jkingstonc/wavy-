@@ -12,7 +12,7 @@ James Clarke
 #include "Bytecode.h"
 
 #ifndef INSTRUCTION_DEBUG
-	#define INSTRUCTION_DEBUG
+	//#define INSTRUCTION_DEBUG
 #endif
 
 #define MAX_PC 2^32
@@ -20,8 +20,8 @@ James Clarke
 #define MAX_CORE_COUNT 2^8
 
 #define PUSH_EXEC(item) this->exec_stack.Push(item)
-#define POP_EXEC() this->exec_stack.Pop()
-#define PEEK_EXEC() this->exec_stack.Peek()
+#define POP_EXEC() (this->exec_stack.Pop())
+#define PEEK_EXEC() (this->exec_stack.Peek())
 
 #define END() (this->bytecode->at(this->pc)==END)
 
@@ -55,8 +55,8 @@ private:
 	std::shared_ptr<VM> vm;
 	uint32_t pc;
 	std::shared_ptr<std::vector<int32_t>> bytecode;
-	Stack<std::shared_ptr<WItem>> exec_stack;
+	Stack<WItem*> exec_stack;
 	Stack<FuncFrame> func_stack;
-	std::vector<std::shared_ptr<WItem>> locals;
+	std::vector<WItem*> locals;
 	CoreState state;
 };

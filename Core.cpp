@@ -14,9 +14,9 @@ Core::Core(std::shared_ptr<VM> vm, uint8_t id)
 	this->vm = vm;
 	this->state.id = id;
 	this->pc = 0;
-	this->exec_stack = Stack<std::shared_ptr<WItem>>();
+	this->exec_stack = Stack<WItem*>();
 	this->func_stack = Stack<FuncFrame>();
-	this->locals = std::vector<std::shared_ptr<WItem>>();
+	this->locals = std::vector<WItem*>();
 }
 
 Core::~Core()
@@ -63,6 +63,7 @@ void Core::Eval()
 					break;
 				case PRINT:
 				{
+					//std::cout << "Print Debug: " << ITEM_DEBUG(PEEK_EXEC()) << std::endl;
 					std::cout << ITEM_DEBUG(PEEK_EXEC()) << std::endl;
 					break;
 				}
@@ -74,21 +75,29 @@ void Core::Eval()
 				{
 					// Load the shared_ptr from the cbank, & create a copy for the stack
 					// This is becuase the cbank is immuatble
-					std::shared_ptr<WItem> item = REQ_C_ITEM(GET_ARG());
-					PUSH_EXEC(std::make_shared<WItem>(*item)); break;
+					/*std::shared_ptr<WItem> item = REQ_C_ITEM(GET_ARG());
+					PUSH_EXEC(std::make_shared<WItem>(*item)); break;*/
+					WItem* item = REQ_C_ITEM(GET_ARG());
+					PUSH_EXEC(item);
+					break;
 				}
 				case LD_VAR:
 				{
 					// We don't create a copy, as the mbank is mutable
-					std::shared_ptr<WItem> item = REQ_M_ITEM(GET_ARG());
-					PUSH_EXEC(item); break;
+					/*std::shared_ptr<WItem> item = REQ_M_ITEM(GET_ARG());
+					PUSH_EXEC(item); break;*/
+					WItem* item = REQ_M_ITEM(GET_ARG());
+					PUSH_EXEC(item);
+					break;
 				}
 				case LD_LOCAL:
 				{
 					PUSH_EXEC(GET_LOCAL(GET_ARG())); break;
 				}
 				case LD_ZERO:
-					PUSH_EXEC(std::make_shared<WInt>(0)); break;
+					/*PUSH_EXEC(std::make_shared<WInt>(0)); break;*/
+					PUSH_EXEC(&WInt(0));
+					break;
 				case DEFINE_VAR:
 					DEFINE_MITEM(GET_ARG(), POP_EXEC());  break;
 				case ASSIGN_VAR:
